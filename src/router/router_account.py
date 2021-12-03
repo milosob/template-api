@@ -33,7 +33,9 @@ router = fastapi.APIRouter(
 )
 async def post_account_register(
         request: fastapi.Request,
-        account_register_in: src.dto.dto_account.DtoPostAccountRegisterIn = fastapi.Depends(),
+        account_register_in: src.dto.dto_account.DtoPostAccountRegisterIn = fastapi.Body(
+            ...
+        ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
         ),
@@ -141,7 +143,9 @@ async def post_account_register(
 )
 async def post_account_authenticate(
         request: fastapi.Request,
-        post_account_authenticate_in: src.dto.dto_account.DtoPostAccountAuthenticateIn,
+        post_account_authenticate_in: src.dto.dto_account.DtoPostAccountAuthenticateIn = fastapi.Body(
+            ...
+        ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
         ),

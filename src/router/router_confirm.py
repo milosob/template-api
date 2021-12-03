@@ -34,7 +34,9 @@ router = fastapi.APIRouter(
 )
 async def post_confirm(
         request: fastapi.Request,
-        post_confirm_in: src.dto.dto_confirm.DtoPostConfirmIn,
+        post_confirm_in: src.dto.dto_confirm.DtoPostConfirmIn = fastapi.Body(
+            ...
+        ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
         ),
