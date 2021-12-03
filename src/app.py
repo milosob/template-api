@@ -2,6 +2,7 @@ import asyncio
 import logging
 
 import fastapi
+import fastapi.middleware.cors
 import hypercorn.config
 import hypercorn.asyncio
 import starlette.middleware.base
@@ -43,6 +44,14 @@ def run(
             starlette.middleware.base.BaseHTTPMiddleware,
             dispatch=app_middleware
         )
+
+    app.add_middleware(
+        fastapi.middleware.cors.CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     # app routers
     app.include_router(
