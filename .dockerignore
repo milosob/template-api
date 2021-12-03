@@ -1,0 +1,7 @@
+.gitignore
+config.json
+.git
+.idea
+.vs
+proto
+chia_blockchain_data_service_api.egg-info
