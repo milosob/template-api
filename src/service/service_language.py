@@ -53,7 +53,7 @@ class ServiceLanguage:
     def by_request(
             self,
             request: fastapi.Request
-    ) -> src.language.language.Language:
+    ) -> src.language.language_impl.Language:
 
         if "accept-language" in request.headers:
             return self.by_accept_language(
