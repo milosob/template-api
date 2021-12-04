@@ -31,6 +31,14 @@ router = fastapi.APIRouter(
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.dto_confirm.DtoPostConfirmOut,
             "description": "Confirmation succeeded."
+        },
+        fastapi.status.HTTP_400_BAD_REQUEST: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_404_NOT_FOUND: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )

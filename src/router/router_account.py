@@ -15,6 +15,7 @@ import src.depends.depends_state_request
 import src.error.error
 import src.error.error_type
 import src.dto.dto_account
+import src.dto.dto_error
 import src.state.state_app
 import src.state.state_request
 
@@ -32,6 +33,10 @@ router = fastapi.APIRouter(
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.dto_account.DtoPostAccountRegisterOut,
             "description": "Resource created."
+        },
+        fastapi.status.HTTP_400_BAD_REQUEST: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )
@@ -151,6 +156,10 @@ async def post_account_register(
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.dto_account.DtoPostAccountAuthenticateOut,
             "description": "Operation successful."
+        },
+        fastapi.status.HTTP_401_UNAUTHORIZED: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )
