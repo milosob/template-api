@@ -7,7 +7,7 @@ import hypercorn.config
 import hypercorn.asyncio
 import starlette.middleware.base
 
-import src.handler.handler_error_validation
+import src.handler.handler_error
 import src.middleware.middleware_request_state
 import src.middleware.middleware_request_state_lang
 import src.router.router_account
@@ -28,8 +28,8 @@ def run(
 
     # app error handlers
     app.add_exception_handler(
-        src.handler.handler_error_validation.error_type,
-        src.handler.handler_error_validation.handler
+        src.handler.handler_error.error_type,
+        src.handler.handler_error.handler
     )
 
     # app middleware
