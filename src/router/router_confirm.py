@@ -1,4 +1,4 @@
-import time
+import datetime
 
 import fastapi
 
@@ -12,6 +12,8 @@ import src.depends.depends_state_app
 import src.depends.depends_state_request
 import src.dto.dto_account
 import src.dto.dto_confirm
+import src.error.error
+import src.error.error_type
 import src.state.state_app
 import src.state.state_request
 
@@ -46,20 +48,33 @@ async def post_confirm(
 ):
     db_confirm_model: src.database.confirm.database_confirm_model.DatabaseConfirmModel
 
-    timestamp_now: int
-    timestamp_now = int(time.time())
+    date_now: datetime.datetime
+    date_now = datetime.datetime.utcnow()
 
     try:
-        db_confirm_model = await state_app.database.database_confirm.find_by_identifier(
-            identifier=post_confirm_in.token
+        # Retrieve confirm.
+        db_confirm_model = await state_app.database.database_confirm.find_by_token(
+            token=post_confirm_in.token
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
-        # TODO Handle case.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_404_NOT_FOUND,
+            type=src.error.error_type.CONFIRM_TOKEN_NOT_FOUND
+        )
 
-    if db_confirm_model.expires_at < timestamp_now:
-        # TODO Handle case, confirmation time expired.
-        raise Exception()
+    # Check if token expired.
+    if db_confirm_model.expires_at < date_now:
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_400_BAD_REQUEST,
+            type=src.error.error_type.CONFIRM_TOKEN_EXPIRED
+        )
+
+    # Check if token was consumed.
+    if db_confirm_model.confirmed_at is None:
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_400_BAD_REQUEST,
+            type=src.error.error_type.CONFIRM_TOKEN_CONSUMED
+        )
 
     # Guard to check that confirmation really occurred.
     confirm_guard: bool
@@ -73,53 +88,49 @@ async def post_confirm(
         db_account_model: src.database.account.database_account_model.DatabaseAccountModel
 
         try:
-            db_account_model = await state_app.database.database_account.find_by_identifier(
-                identifier=db_confirm_model_context.identifier
+            # Find account.
+            db_account_model = await state_app.database.database_account.find_by_email(
+                email=db_confirm_model_context.email
             )
         except src.database.error.database_error_not_found.DatabaseErrorNotFound:
-            # TODO Handle case.
-            raise Exception()
+            raise src.error.error.Error(
+                code=fastapi.status.HTTP_404_NOT_FOUND,
+                type=src.error.error_type.CONFIRM_TOKEN_EMAIL_NOT_FOUND
+            )
 
-        for account_email_reg_record in db_account_model.email_reg.records:
-            if account_email_reg_record.email == db_confirm_model_context.email:
+        for email_reg_record in db_account_model.email.reg.records:
+            # Confirm on matching email.
+            if email_reg_record.email == db_confirm_model_context.email:
                 confirm_guard = True
-                if account_email_reg_record.confirmed_at == 0:
-                    account_email_reg_record.confirmed_at = timestamp_now
-
-                    if account_email_reg_record.email == db_account_model.email_reg.primary.email:
-                        db_account_model.email_reg.primary.confirmed_at = timestamp_now
-                # Already confirmed, ignore.
-                break
+                if email_reg_record.confirmed_at is None:
+                    email_reg_record.confirmed_at = date_now
+                    if email_reg_record.email == db_account_model.email.reg.primary.email:
+                        db_account_model.email.reg.primary.confirmed_at = date_now
 
         if not confirm_guard:
-            # TODO Handle case.
-            raise Exception()
-
-        db_confirm_model.confirmed_at = timestamp_now
-
-        try:
-
-            await state_app.database.database_confirm.update(
-                db_confirm_model
+            raise src.error.error.Error(
+                code=fastapi.status.HTTP_400_BAD_REQUEST,
+                type=src.error.error_type.CONFIRM_TOKEN_FAILURE
             )
 
-        except src.database.error.database_error_not_found.DatabaseErrorNotFound:
-            # TODO Handle case.
-            raise Exception()
+        db_confirm_model.confirmed_at = date_now
 
-        try:
+        # Update confirm.
+        await state_app.database.database_confirm.update(
+            model=db_confirm_model
+        )
 
-            await state_app.database.database_account.update(
-                db_account_model
-            )
-
-        except src.database.error.database_error_not_found.DatabaseErrorNotFound:
-            # TODO Handle case.
-            raise Exception()
+        # Update account.
+        await state_app.database.database_account.update(
+            model=db_account_model
+        )
 
         # Maybe return confirmation context data?
         return src.dto.dto_confirm.DtoPostConfirmOut()
 
     else:
         # Programmer error.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_400_BAD_REQUEST,
+            type=src.error.error_type.CONFIRM_TOKEN_FAILURE
+        )

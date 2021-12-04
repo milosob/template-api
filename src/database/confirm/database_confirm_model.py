@@ -1,17 +1,19 @@
+import datetime
 import typing
 
 
 class DatabaseConfirmEmailModel:
-    identifier: str
     email: str
 
 
 class DatabaseConfirmModel:
     identifier: str
 
-    created_at: int
-    expires_at: int
-    confirmed_at: int
+    token: str
+
+    issued_at: datetime.datetime
+    expires_at: datetime.datetime
+    confirmed_at: datetime.datetime
 
     type: str
     context: typing.Any

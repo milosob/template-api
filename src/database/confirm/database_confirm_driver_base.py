@@ -12,7 +12,13 @@ class DatabaseConfirmDriverBase:
     async def find_by_identifier(
             self,
             identifier: str
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+    ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
+        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+
+    async def find_by_token(
+            self,
+            token: str
+    ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
         raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
 
     async def insert(

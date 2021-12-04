@@ -1,10 +1,11 @@
+import datetime
 import typing
 
 
 class DatabaseAccountEmailRegRecordModel:
     email: str
     primary: bool
-    confirmed_at: int
+    confirmed_at: datetime.datetime
 
 
 class DatabaseAccountEmailRegModel:
@@ -14,15 +15,20 @@ class DatabaseAccountEmailRegModel:
 
 class DatabaseAccountEmailLogRecordModel:
     email: str
-    confirmed_at: int
+    confirmed_at: datetime.datetime
 
     type: str
     context: object
-    occurred_at: int
+    occurred_at: datetime.datetime
 
 
 class DatabaseAccountEmailLogModel:
     records: typing.List[DatabaseAccountEmailLogRecordModel]
+
+
+class DatabaseAccountEmailModel:
+    reg: DatabaseAccountEmailRegModel
+    log: DatabaseAccountEmailLogModel
 
 
 class DatabaseAccountAuthenticationPasswordRegRecordModel:
@@ -38,7 +44,7 @@ class DatabaseAccountAuthenticationPasswordLogRecordModel:
 
     type: str
     context: object
-    occurred_at: int
+    occurred_at: datetime.datetime
 
 
 class DatabaseAccountAuthenticationPasswordLogModel:
@@ -55,12 +61,11 @@ class DatabaseAccountModel:
     identifier: str
 
     # BASIC USER TIME
-    created_at: int
-    changed_at: int
+    created_at: datetime.datetime
+    changed_at: datetime.datetime
 
     # ACCOUNT EMAIL
-    email_reg: DatabaseAccountEmailRegModel
-    email_log: DatabaseAccountEmailLogModel
+    email: DatabaseAccountEmailModel
 
     # ACCOUNT AUTHENTICATION
     authentication: DatabaseAccountAuthenticationModel
@@ -68,14 +73,19 @@ class DatabaseAccountModel:
     def __init__(
             self
     ) -> None:
-        self.email_reg = DatabaseAccountEmailRegModel()
-        self.email_reg.primary = DatabaseAccountEmailRegRecordModel()
-        self.email_reg.records = []
-        self.email_log = DatabaseAccountEmailLogModel()
-        self.email_log.records = []
+        email = DatabaseAccountEmailModel()
+        email.reg = DatabaseAccountEmailRegModel()
+        email.reg.primary = DatabaseAccountEmailRegRecordModel()
+        email.reg.records = []
+        email.log = DatabaseAccountEmailLogModel()
+        email.log.records = []
 
-        self.authentication = DatabaseAccountAuthenticationModel()
-        self.authentication.password_reg = DatabaseAccountAuthenticationPasswordRegModel()
-        self.authentication.password_reg.primary = DatabaseAccountAuthenticationPasswordRegRecordModel()
-        self.authentication.password_log = DatabaseAccountAuthenticationPasswordLogModel()
-        self.authentication.password_log.records = []
+        self.email = email
+
+        authentication = DatabaseAccountAuthenticationModel()
+        authentication.password_reg = DatabaseAccountAuthenticationPasswordRegModel()
+        authentication.password_reg.primary = DatabaseAccountAuthenticationPasswordRegRecordModel()
+        authentication.password_log = DatabaseAccountAuthenticationPasswordLogModel()
+        authentication.password_log.records = []
+
+        self.authentication = authentication

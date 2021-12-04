@@ -1,5 +1,4 @@
-import os
-import time
+import uuid
 import typing
 
 import src.database.confirm.database_confirm_driver_base
@@ -23,9 +22,18 @@ class DatabaseConfirmDriverMemory(
             self,
             identifier: str
     ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
-
         for entry in self.impl:
             if entry.identifier == identifier:
+                return entry
+
+        raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
+
+    async def find_by_token(
+            self,
+            token: str
+    ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
+        for entry in self.impl:
+            if entry.token == token:
                 return entry
 
         raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
@@ -34,11 +42,7 @@ class DatabaseConfirmDriverMemory(
             self,
             model: src.database.confirm.database_confirm_model.DatabaseConfirmModel
     ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
-
-        timestamp = time.time()
-
-        model.identifier = os.urandom(32).hex()
-        model.created_at = timestamp
+        model.identifier = str(uuid.uuid4())
 
         self.impl.append(
             model
@@ -50,7 +54,6 @@ class DatabaseConfirmDriverMemory(
             self,
             model: src.database.confirm.database_confirm_model.DatabaseConfirmModel
     ) -> src.database.confirm.database_confirm_model.DatabaseConfirmModel:
-
         for entry in self.impl:
             if entry.identifier == model.identifier:
                 self.impl.remove(entry)

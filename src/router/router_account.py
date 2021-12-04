@@ -1,3 +1,5 @@
+import datetime
+import os
 import time
 
 import fastapi
@@ -10,6 +12,8 @@ import src.database.confirm.database_confirm_driver_base
 import src.database.confirm.database_confirm_model
 import src.depends.depends_state_app
 import src.depends.depends_state_request
+import src.error.error
+import src.error.error_type
 import src.dto.dto_account
 import src.state.state_app
 import src.state.state_request
@@ -52,8 +56,8 @@ async def post_account_register(
     db_confirm_model_context: src.database.confirm.database_confirm_model.DatabaseConfirmEmailModel
     db_confirm_model_context = src.database.confirm.database_confirm_model.DatabaseConfirmEmailModel()
 
-    timestamp_now: int
-    timestamp_now = int(time.time())
+    date_now: datetime.datetime
+    date_now = datetime.datetime.utcnow()
 
     try:
         # Verify that email is available.
@@ -61,21 +65,23 @@ async def post_account_register(
             email=account_register_in.username
         )
 
-        # TODO Handle case.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_400_BAD_REQUEST,
+            type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
+        )
 
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
         pass
 
     # Assign email and verification token.
-    db_account_model.email_reg.primary.email = account_register_in.username
+    db_account_model.email.reg.primary.email = account_register_in.username
     # Mark email as primary.
-    db_account_model.email_reg.primary.primary = True
+    db_account_model.email.reg.primary.primary = True
     # Mark account to require authentication.
-    db_account_model.email_reg.primary.confirmed_at = 0
+    db_account_model.email.reg.primary.confirmed_at = 0
     # Append email record to registry.
-    db_account_model.email_reg.records.append(
-        db_account_model.email_reg.primary
+    db_account_model.email.reg.records.append(
+        db_account_model.email.reg.primary
     )
 
     # Hash user password.
@@ -89,16 +95,21 @@ async def post_account_register(
             model=db_account_model
         )
     except src.database.error.database_error_conflict.DatabaseErrorConflict:
-        # TODO Handle case.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_400_BAD_REQUEST,
+            type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
+        )
 
     # Configure confirm model.
-    db_confirm_model.expires_at = timestamp_now + 900
+    db_confirm_model.token = os.urandom(32).hex()
+    db_confirm_model.issued_at = date_now
+    db_confirm_model.expires_at = date_now + datetime.timedelta(
+        minutes=15
+    )
     db_confirm_model.type = "account-confirm-email"
 
     # Configure confirm model context.
     db_confirm_model_context.email = account_register_in.username
-    db_confirm_model_context.identifier = db_account_model.identifier
 
     # Assign context to confirm model.
     db_confirm_model.context = db_confirm_model_context
@@ -109,20 +120,22 @@ async def post_account_register(
             model=db_confirm_model
         )
     except src.database.error.database_error_conflict.DatabaseErrorConflict:
-        # TODO Handle case.
-        raise Exception()
-
-    try:
-
-        # Send activation email to the user.
-        await state_app.service.service_email.send_confirm_email_message(
-            email=db_account_model.email_reg.primary.email,
-            token=db_confirm_model.identifier
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
+            type=src.error.error_type.INTERNAL_SERVER_ERROR
         )
 
+    try:
+        # Send activation email to the email.
+        await state_app.service.service_email.send_confirm_email_message(
+            email=db_account_model.email.reg.primary.email,
+            token=db_confirm_model.token
+        )
     except Exception:
-        # TODO Handle case.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            type=src.error.error_type.SERVICE_UNAVAILABLE
+        )
 
     return src.dto.dto_account.DtoPostAccountRegisterOut(
         username=account_register_in.username,
