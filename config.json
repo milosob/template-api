@@ -20,65 +20,6 @@
         "level": "DEBUG"
     },
     "app": {
-        "security": {
-            "jwt": {
-                "auth": {
-                    "issuer": "issuer",
-                    "sign_key": "8e2966227d44debf33cd97465f9d796b75dac8f4293f9c2831ca51251257fda3",
-                    "sign_alg": "HS256",
-                    "validation_options": {
-                        "verify_signature": true,
-                        "verify_aud": true,
-                        "verify_iat": true,
-                        "verify_exp": true,
-                        "verify_nbf": true,
-                        "verify_iss": true,
-                        "verify_sub": false,
-                        "verify_jti": true,
-                        "verify_at_hash": true,
-                        "require_aud": false,
-                        "require_iat": true,
-                        "require_exp": true,
-                        "require_nbf": false,
-                        "require_iss": true,
-                        "require_sub": true,
-                        "require_jti": false,
-                        "require_at_hash": false,
-                        "leeway": 0
-                    }
-                },
-                "time": {
-                    "lifetime": 86400,
-                    "refresh_max_jump": 86400,
-                    "refresh_min_jump": 43200,
-                    "refresh_threshold": 604800
-                },
-                "endpoints": {
-                    "refresh": "/auth/token",
-                    "acquire": "/auth/token"
-                },
-                "scopes": {
-                    "scopes_god": {
-                        "app-root": "app root permissions"
-                    },
-                    "scopes_refresh": {
-                        "app-jwt-refresh": "app jwt token refresh permissions"
-                    },
-                    "scopes_private": {
-                    },
-                    "scopes_public": {
-                        "app-root": "app root permissions",
-                        "app-basic": "app basic permissions",
-                        "app-jwt-refresh": "app jwt token refresh permissions"
-                    },
-                    "scopes_all": {
-                        "app-root": "app root permissions",
-                        "app-basic": "app basic permissions",
-                        "app-jwt-refresh": "app jwt token refresh permissions"
-                    }
-                }
-            }
-        },
         "database": {
             "database_account": {
                 "driver": "memory",
@@ -109,7 +50,7 @@
                     "password": ""
                 }
             },
-            "service_language": {
+            "service_lang": {
                 "default": "pl"
             },
             "service_jwt": {

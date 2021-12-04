@@ -4,7 +4,7 @@ import src.depends.depends_state_app
 import src.depends.depends_state_request
 import src.state.state_app
 import src.state.state_request
-import src.state.state_request_language
+import src.state.state_request_lang
 
 
 async def middleware(
@@ -24,9 +24,9 @@ async def middleware(
         request=request
     )
 
-    # Set request language state.
-    state_request.language = src.state.state_request_language.StateRequestLanguage(
-        language=state_app.service.service_language.by_request(
+    # Set request lang state.
+    state_request.lang = src.state.state_request_lang.StateRequestLang(
+        lang=state_app.service.service_lang.by_request(
             request=request
         )
     )

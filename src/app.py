@@ -9,7 +9,7 @@ import starlette.middleware.base
 
 import src.handler.handler_error_validation
 import src.middleware.middleware_request_state
-import src.middleware.middleware_request_state_language
+import src.middleware.middleware_request_state_lang
 import src.router.router_account
 import src.router.router_confirm
 import src.state.state_app
@@ -35,7 +35,7 @@ def run(
     # app middleware
     app_middlewares = [
         src.middleware.middleware_request_state.middleware,
-        src.middleware.middleware_request_state_language.middleware
+        src.middleware.middleware_request_state_lang.middleware
     ]
 
     # app middleware register in reverse order

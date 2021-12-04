@@ -1,10 +1,10 @@
 import src.state.state_request_account
-import src.state.state_request_language
+import src.state.state_request_lang
 
 
 class StateRequest:
     account: src.state.state_request_account.StateRequestAccount
-    language: src.state.state_request_language.StateRequestLanguage
+    lang: src.state.state_request_lang.StateRequestLang
 
     def __init__(
             self

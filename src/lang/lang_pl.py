@@ -1,6 +1,6 @@
-import src.language.language_impl
+import src.lang.lang
 
-language = src.language.language_impl.Language(
+lang = src.lang.lang.Lang(
     {
         "post-account-register-in-invalid-email": "Nieprawidłowy adres e-mail."
     }

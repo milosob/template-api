@@ -19,7 +19,7 @@ async def handler(
         request=request
     )
 
-    # 1. TODO Perform errors translation into message based on desired language.
+    # 1. TODO Perform errors translation into message based on desired lang.
 
     return fastapi.responses.JSONResponse(
         status_code=fastapi.status.HTTP_422_UNPROCESSABLE_ENTITY,
