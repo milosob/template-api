@@ -3,8 +3,6 @@ import typing
 import fastapi
 import pydantic
 
-import fastapi.security
-
 
 # POST ACCOUNT REGISTER PRIVATE
 
