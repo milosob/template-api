@@ -59,7 +59,7 @@ class DtoPostAccountAuthenticateInBase(pydantic.BaseModel):
     password: str = fastapi.Body(
         ...
     )
-    scopes: typing.List[str] = fastapi.Body(
+    scopes: typing.Optional[typing.List[str]] = fastapi.Body(
         ...
     )
 
