@@ -39,6 +39,14 @@ router = fastapi.APIRouter(
         fastapi.status.HTTP_404_NOT_FOUND: {
             "model": src.dto.dto_error.DtoErrorApiOut,
             "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )

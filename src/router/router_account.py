@@ -35,6 +35,14 @@ router = fastapi.APIRouter(
         fastapi.status.HTTP_400_BAD_REQUEST: {
             "model": src.dto.dto_error.DtoErrorApiOut,
             "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )
@@ -155,6 +163,14 @@ async def post_account_register(
         fastapi.status.HTTP_401_UNAUTHORIZED: {
             "model": src.dto.dto_error.DtoErrorApiOut,
             "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
         }
     }
 )
@@ -229,6 +245,14 @@ async def post_account_authenticate(
             "description": "Operation successful."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
             "model": src.dto.dto_error.DtoErrorApiOut,
             "description": "Error."
         }
