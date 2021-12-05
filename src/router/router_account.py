@@ -10,7 +10,6 @@ import src.database.account.database_account_model
 import src.database.confirm.database_confirm_driver_base
 import src.database.confirm.database_confirm_model
 import src.depends.depends_state_app
-import src.depends.depends_state_request
 import src.error.error
 import src.error.error_type
 import src.dto.dto_account
@@ -26,7 +25,7 @@ router = fastapi.APIRouter(
 
 @router.post(
     path="/register",
-    summary="Register account.",
+    summary="Account register.",
     status_code=fastapi.status.HTTP_201_CREATED,
     responses={
         fastapi.status.HTTP_201_CREATED: {
@@ -46,9 +45,6 @@ async def post_account_register(
         ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
-        ),
-        state_request: src.state.state_request.StateRequest = fastapi.Depends(
-            src.depends.depends_state_request.depends
         )
 ):
     db_account_model: src.database.account.database_account_model.DatabaseAccountModel
@@ -77,7 +73,7 @@ async def post_account_register(
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
         pass
 
-    # Assign email and verification token.
+    # Assign email.
     db_account_model.email.reg.primary.email = account_register_in.username
     # Mark email as primary.
     db_account_model.email.reg.primary.primary = True
@@ -149,7 +145,7 @@ async def post_account_register(
 
 @router.post(
     path="/authenticate",
-    summary="Authenticate account.",
+    summary="Account authenticate.",
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
@@ -169,9 +165,6 @@ async def post_account_authenticate(
         ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
-        ),
-        state_request: src.state.state_request.StateRequest = fastapi.Depends(
-            src.depends.depends_state_request.depends
         )
 ):
     db_account_model: src.database.account.database_account_model.DatabaseAccountModel
@@ -182,29 +175,101 @@ async def post_account_authenticate(
             email=post_account_authenticate_in.username
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
-        # TODO Bad request, invalid username or password.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_401_UNAUTHORIZED,
+            type=src.error.error_type.ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS
+        )
 
     # Authenticate against provided credentials.
     if not state_app.service.service_password.password_verify(
             password=post_account_authenticate_in.password,
             password_hash=db_account_model.authentication.password_reg.primary.password
     ):
-        # TODO Bad request, invalid username or password.
-        raise Exception()
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_401_UNAUTHORIZED,
+            type=src.error.error_type.ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS
+        )
 
     # Successfully authenticated.
-    # TODO Verify scopes from body.
+
+    sub: str
+    sub = post_account_authenticate_in.username
+    data: dict
+    data = {
+        "id": db_account_model.identifier
+    }
+
+    access_token: str
+    access_token = state_app.service.service_jwt.issue_access(
+        sub=post_account_authenticate_in.username,
+        data=data,
+        scopes=[]
+    )
+    refresh_token: str
+    refresh_token = state_app.service.service_jwt.issue_refresh(
+        sub=sub,
+        data=data,
+        scopes=[],
+        access_token=access_token
+    )
 
     return src.dto.dto_account.DtoPostAccountAuthenticateOut(
-        token=state_app.service.service_jwt.issue(
-            sub=post_account_authenticate_in.username,
-            data={
-                "id": db_account_model.identifier
-            },
-            scopes=post_account_authenticate_in.scopes + [
-                # TODO Set scopes based on request scopes, account state (verified or not) and desired permissions.
-            ]
+        access_token=access_token,
+        refresh_token=refresh_token
+    )
+
+
+@router.post(
+    path="/authenticate/refresh",
+    summary="Account authenticate refresh.",
+    status_code=fastapi.status.HTTP_200_OK,
+    responses={
+        fastapi.status.HTTP_200_OK: {
+            "model": src.dto.dto_account.DtoPostAccountAuthenticateRefreshOut,
+            "description": "Operation successful."
+        },
+        fastapi.status.HTTP_401_UNAUTHORIZED: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        }
+    }
+)
+async def post_account_authenticate_refresh(
+        request: fastapi.Request,
+        post_account_authenticate_refresh_in: src.dto.dto_account.DtoPostAccountAuthenticateRefreshIn = fastapi.Body(
+            ...
         ),
-        token_type="Bearer"
+        state_app: src.state.state_app.StateApp = fastapi.Depends(
+            src.depends.depends_state_app.depends
+        )
+):
+    payload: dict
+    payload = state_app.service.service_jwt.verify_refresh(
+        access_token=post_account_authenticate_refresh_in.access_token,
+        refresh_token=post_account_authenticate_refresh_in.refresh_token,
+        refresh_token_required_scopes=[]
+    )
+
+    sub: str
+    sub = payload["sub"]
+    data: dict
+    data = payload["data"]
+
+    access_token: str
+    access_token = state_app.service.service_jwt.issue_access(
+        sub=sub,
+        data=data,
+        scopes=[]
+    )
+    refresh_token: str
+    refresh_token = state_app.service.service_jwt.issue_refresh(
+        sub=sub,
+        data=data,
+        scopes=[],
+        access_token=access_token
+    )
+
+    return src.dto.dto_account.DtoPostAccountAuthenticateRefreshOut(
+        access_token=access_token,
+        refresh_token=refresh_token
     )

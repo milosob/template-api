@@ -50,37 +50,22 @@
                 "default": "en"
             },
             "service_jwt": {
-                "issuer": "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c",
-                "sign_key": "8e2966227d44debf33cd97465f9d796b75dac8f4293f9c2831ca51251257fda3",
-                "sign_alg": "HS256",
-                "validation_options": {
-                    "verify_signature": true,
-                    "verify_aud": true,
-                    "verify_iat": true,
-                    "verify_exp": true,
-                    "verify_nbf": true,
-                    "verify_iss": true,
-                    "verify_sub": false,
-                    "verify_jti": true,
-                    "verify_at_hash": true,
-                    "require_aud": false,
-                    "require_iat": true,
-                    "require_exp": true,
-                    "require_nbf": false,
-                    "require_iss": true,
-                    "require_sub": true,
-                    "require_jti": false,
-                    "require_at_hash": false,
-                    "leeway": 0
-                },
-                "lifetime": 86400,
-                "lifetime_bump": 86400,
-                "lifetime_bump_threshold": 604800,
+                "issue_id": "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c",
+                "issue_key": "8e2966227d44debf33cd97465f9d796b75dac8f4293f9c2831ca51251257fda3",
+                "issue_alg": "HS256",
+                "verify_ids": [
+                    "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c"
+                ],
+                "verify_keys": [
+                    "8e2966227d44debf33cd97465f9d796b75dac8f4293f9c2831ca51251257fda3"
+                ],
+                "verify_algs": [
+                    "HS256"
+                ],
+                "access_lifetime": 86400,
+                "refresh_lifetime": 604800,
                 "scopes_god": [
                     "root"
-                ],
-                "scopes_refresh": [
-                    "refresh"
                 ]
             },
             "service_password": {

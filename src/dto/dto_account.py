@@ -92,8 +92,8 @@ class DtoPostAccountAuthenticateInBase(pydantic.BaseModel):
 
 
 class DtoPostAccountAuthenticateOutBase(pydantic.BaseModel):
-    token: str
-    token_type: str
+    access_token: str
+    refresh_token: str
 
 
 # POST ACCOUNT AUTHENTICATE PUBLIC
@@ -103,4 +103,44 @@ class DtoPostAccountAuthenticateIn(DtoPostAccountAuthenticateInBase):
 
 
 class DtoPostAccountAuthenticateOut(DtoPostAccountAuthenticateOutBase):
+    pass
+
+
+# POST ACCOUNT AUTHENTICATE REFRESH PRIVATE
+
+class DtoPostAccountAuthenticateRefreshInBase(pydantic.BaseModel):
+    access_token: str
+    refresh_token: str
+
+    @pydantic.validator("access_token")
+    def validator_access_token(
+            cls,
+            v: str
+    ) -> str:
+        # TODO
+
+        return v
+
+    @pydantic.validator("refresh_token")
+    def validator_refresh_token(
+            cls,
+            v: str
+    ) -> str:
+        # TODO
+
+        return v
+
+
+class DtoPostAccountAuthenticateRefreshOutBase(pydantic.BaseModel):
+    access_token: str
+    refresh_token: str
+
+
+# POST ACCOUNT AUTHENTICATE REFRESH PUBLIC
+
+class DtoPostAccountAuthenticateRefreshIn(DtoPostAccountAuthenticateRefreshInBase):
+    pass
+
+
+class DtoPostAccountAuthenticateRefreshOut(DtoPostAccountAuthenticateRefreshOutBase):
     pass
