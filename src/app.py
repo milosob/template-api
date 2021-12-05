@@ -33,7 +33,7 @@ def run(
     app_middleware.extend(
         [
 
-        ][::-1]
+        ]
     )
 
     # app middleware cors
