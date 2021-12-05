@@ -1,11 +1,13 @@
 import asyncio
 import logging
+import typing
 
 import fastapi
 import fastapi.middleware.cors
 import hypercorn.config
 import hypercorn.asyncio
 import starlette.middleware.base
+import starlette.middleware.cors
 
 import src.handler.handler_error
 import src.middleware.middleware_request_state
@@ -23,34 +25,52 @@ def run(
         level=config["log"]["level"]
     )
 
-    # app build
-    app = fastapi.FastAPI()
+    # app middleware
+    app_middleware: typing.List[fastapi.middleware.Middleware]
+    app_middleware = []
 
-    # app error handlers
-    app.add_exception_handler(
-        src.handler.handler_error.error_type,
-        src.handler.handler_error.handler
+    # app middleware internal pre
+    app_middleware.extend(
+        [
+
+        ][::-1]
     )
 
-    # app middleware
-    app_middlewares = [
-        src.middleware.middleware_request_state.middleware,
-        src.middleware.middleware_request_state_lang.middleware
-    ]
-
-    # app middleware register in reverse order
-    for app_middleware in app_middlewares[::-1]:
-        app.add_middleware(
-            starlette.middleware.base.BaseHTTPMiddleware,
-            dispatch=app_middleware
+    # app middleware cors
+    if "cors" in config["middleware"] and config["middleware"]["cors"]["enabled"]:
+        app_middleware.append(
+            fastapi.middleware.Middleware(
+                cls=fastapi.middleware.cors.CORSMiddleware,
+                **{
+                    **config["middleware"]["cors"]["options"]
+                }
+            )
         )
 
-    app.add_middleware(
-        fastapi.middleware.cors.CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
+    # app middleware internal after
+    app_middleware.extend(
+        [
+            fastapi.middleware.Middleware(
+                cls=starlette.middleware.base.BaseHTTPMiddleware,
+                dispatch=src.middleware.middleware_request_state.middleware
+            ),
+            fastapi.middleware.Middleware(
+                cls=starlette.middleware.base.BaseHTTPMiddleware,
+                dispatch=src.middleware.middleware_request_state_lang.middleware
+            )
+        ]
+    )
+
+    # app exception handlers
+    app_exception_handlers: dict
+    app_exception_handlers = {
+        src.handler.handler_error.error_type: src.handler.handler_error.handler
+    }
+
+    # app build
+    app = fastapi.FastAPI(
+        middleware=app_middleware,
+        exception_handlers=app_exception_handlers
     )
 
     # app routers
@@ -64,32 +84,16 @@ def run(
 
     # app state
     app.state = src.state.state_app.StateApp(
-        config=config["app"]
+        config=config["state"]
     )
 
-    # app networking
-    use_ipv4: bool = config["net"]["ipv4"]
-    use_ipv4_ssl: bool = config["net"]["ipv4_ssl"]
-    use_ipv6: bool = config["net"]["ipv6"]
-    use_ipv6_ssl: bool = config["net"]["ipv6_ssl"]
-    use_ssl: bool = config["net"]["ssl"]
-
-    app_serve_config: hypercorn.Config = hypercorn.Config()
+    # app net
+    app_serve_config: hypercorn.Config
+    app_serve_config = hypercorn.Config()
 
     app_serve_config.bind.clear()
 
-    if use_ipv4:
-        host: str = config["net"]["ipv4_host"]
-        port: int = config["net"]["ipv4_port"]
-
-        app_serve_config.bind.append(
-            f"{host}:{port}"
-        )
-
-    if use_ipv6:
-        host: str = config["net"]["ipv6_host"]
-        port: int = config["net"]["ipv6_port"]
-
+    for host, port in config["net"].items():
         app_serve_config.bind.append(
             f"{host}:{port}"
         )

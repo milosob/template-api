@@ -1,25 +1,28 @@
 {
     "net": {
-        "ipv4": true,
-        "ipv4_host": "0.0.0.0",
-        "ipv4_port": 10001,
-        "ipv4_ssl": true,
-        "ipv4_ssl_host": "0.0.0.0",
-        "ipv4_ssl_port": 10002,
-        "ipv6": false,
-        "ipv6_host": "::",
-        "ipv6_port": 10001,
-        "ipv6_ssl": true,
-        "ipv6_ssl_host": "::",
-        "ipv6_ssl_port": 10002,
-        "ssl": false,
-        "ssl_certificate_path": "",
-        "ssl_certificate_key_path": ""
+        "0.0.0.0": 10001
     },
     "log": {
         "level": "DEBUG"
     },
-    "app": {
+    "middleware": {
+        "cors": {
+            "enabled": true,
+            "options": {
+                "allow_origins": [
+                    "*"
+                ],
+                "allow_methods": [
+                    "*"
+                ],
+                "allow_headers": [
+                    "*"
+                ],
+                "allow_credentials": false
+            }
+        }
+    },
+    "state": {
         "database": {
             "database_account": {
                 "driver": "memory",
@@ -51,7 +54,7 @@
                 }
             },
             "service_lang": {
-                "default": "pl"
+                "default": "en"
             },
             "service_jwt": {
                 "issuer": "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c",
