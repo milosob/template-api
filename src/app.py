@@ -93,7 +93,7 @@ def run(
 
     app_serve_config.bind.clear()
 
-    for host, port in config["net"].items():
+    for host, port in config["bind"].items():
         app_serve_config.bind.append(
             f"{host}:{port}"
         )
