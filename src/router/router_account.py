@@ -86,7 +86,7 @@ async def post_account_register(
     # Mark email as primary.
     db_account_model.email.reg.primary.primary = True
     # Mark account to require authentication.
-    db_account_model.email.reg.primary.confirmed_at = 0
+    db_account_model.email.reg.primary.confirmed_at = None
     # Append email record to registry.
     db_account_model.email.reg.records.append(
         db_account_model.email.reg.primary
@@ -114,6 +114,7 @@ async def post_account_register(
     db_confirm_model.expires_at = date_now + datetime.timedelta(
         minutes=15
     )
+    db_confirm_model.confirmed_at = None
     db_confirm_model.type = "account-confirm-email"
 
     # Configure confirm model context.
@@ -134,12 +135,22 @@ async def post_account_register(
         )
 
     try:
-        pass
-        # Send activation email to the email. TODO
-        # await state_app.service.service_email.send(
-        #    message=None
-        # )
-    except Exception:
+        await state_app.service.service_email.send_template_account_register_confirm(
+            language=state_app.service.service_lang.by_request(
+                request=request
+            ),
+            parameters={
+                "to": {
+                    db_account_model.email.reg.primary.email: None
+                },
+                "subject": {},
+                "body": {
+                    "token": db_confirm_model.token
+                }
+            }
+        )
+    except Exception as e:
+        print(e)
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE

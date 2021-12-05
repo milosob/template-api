@@ -86,7 +86,7 @@ async def post_confirm(
         )
 
     # Check if token was consumed.
-    if db_confirm_model.confirmed_at is None:
+    if db_confirm_model.confirmed_at is not None:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
             type=src.error.error_type.CONFIRM_TOKEN_CONSUMED

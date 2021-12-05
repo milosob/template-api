@@ -1,2 +1,0 @@
-class Lang(dict):
-    pass

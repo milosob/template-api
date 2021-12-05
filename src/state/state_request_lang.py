@@ -1,11 +1,8 @@
-import src.lang.lang
-
-
 class StateRequestLang:
-    lang: src.lang.lang.Lang
+    lang: str
 
     def __init__(
             self,
-            lang: src.lang.lang.Lang
+            lang: str
     ):
         self.lang = lang
