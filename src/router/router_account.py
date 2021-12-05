@@ -1,6 +1,5 @@
 import datetime
 import os
-import time
 
 import fastapi
 
@@ -131,11 +130,11 @@ async def post_account_register(
         )
 
     try:
-        # Send activation email to the email.
-        await state_app.service.service_email.send_confirm_email_message(
-            email=db_account_model.email.reg.primary.email,
-            token=db_confirm_model.token
-        )
+        pass
+        # Send activation email to the email. TODO
+        # await state_app.service.service_email.send(
+        #    message=None
+        # )
     except Exception:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,

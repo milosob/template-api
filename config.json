@@ -26,31 +26,24 @@
         "database": {
             "database_account": {
                 "driver": "memory",
-                "driver_config": {
-                    "host": "",
-                    "port": 4444,
-                    "username": "",
-                    "password": ""
+                "memory": {
                 }
             },
             "database_confirm": {
                 "driver": "memory",
-                "driver_config": {
-                    "host": "",
-                    "port": 4444,
-                    "username": "",
-                    "password": ""
+                "memory": {
                 }
             }
         },
         "service": {
             "service_email": {
                 "driver": "smtp",
-                "driver_config": {
+                "smtp": {
                     "host": "",
                     "port": 2525,
                     "username": "",
-                    "password": ""
+                    "password": "",
+                    "tls": true
                 }
             },
             "service_lang": {

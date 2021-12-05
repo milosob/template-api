@@ -1,17 +1,85 @@
+import aiosmtplib
+import email.message
+import ssl
+import typing
+
+
 class ServiceEmail:
     config: dict
+
+    send_cb: typing.Callable[[email.message.EmailMessage], typing.Coroutine[typing.Any, typing.Any, None]]
+
+    smtp_host: str
+    smtp_port: int
+    smtp_username: str
+    smtp_password: str
+    smtp_tls: bool
+    smtp_tls_context: ssl.SSLContext
+
+    smtp_options: dict
 
     def __init__(
             self,
             config: dict
     ) -> None:
         self.config = config
-        # TODO Read config and configure service.
 
-    async def send_confirm_email_message(
+        service_email_driver: str
+        service_email_driver = config["driver"]
+
+        if service_email_driver not in [
+            "smtp"
+        ]:
+            raise NotImplementedError()
+
+        if config["driver"] == "smtp":
+            self.send_cb = self._send_smtp
+
+            self.smtp_host = config["smtp"]["host"]
+            self.smtp_port = config["smtp"]["port"]
+            self.smtp_username = config["smtp"]["username"]
+            self.smtp_password = config["smtp"]["password"]
+
+            self.smtp_options = {
+                "hostname": self.smtp_host,
+                "port": self.smtp_port,
+                "username": self.smtp_username,
+                "password": self.smtp_password
+            }
+
+            if self.smtp_port in [
+                587,
+                2525,
+                465
+            ]:
+                self.smtp_tls = True
+                self.smtp_tls_context = ssl.create_default_context()
+
+                self.smtp_options.update(
+                    {
+                        "use_tls": self.smtp_tls,
+                        "tls_context": self.smtp_tls_context
+                    }
+                )
+
+            else:
+                self.smtp_tls = False
+                self.smtp_tls_context = None
+
+    async def _send_smtp(
             self,
-            email: str,
-            token: str
+            message: email.message.EmailMessage
+    ):
+
+        await aiosmtplib.send(
+            message,
+            **self.smtp_options
+        )
+
+    async def send(
+            self,
+            message: email.message.EmailMessage
     ) -> None:
-        # TODO Send confirm email message.
-        pass
+        await self.send_cb(
+            message=message
+        )
