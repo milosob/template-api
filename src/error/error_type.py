@@ -1,9 +1,9 @@
 INTERNAL_SERVER_ERROR = "internal-server-error"
 SERVICE_UNAVAILABLE = "service-unavailable"
 
-AUTHORIZATION_ACCESS_TOKEN_ERROR = "authorization-access-token-error"
+AUTHORIZATION_ACCESS_TOKEN_ERROR = "authorization-access-token-invalid"
 AUTHORIZATION_ACCESS_TOKEN_EXPIRED = "authorization-access-token-expired"
-AUTHORIZATION_REFRESH_TOKEN_ERROR = "authorization-refresh-token-error"
+AUTHORIZATION_REFRESH_TOKEN_ERROR = "authorization-refresh-token-invalid"
 AUTHORIZATION_REFRESH_TOKEN_EXPIRED = "authorization-refresh-token-expired"
 
 ACCOUNT_REGISTER_USERNAME_TAKEN = "account-register-username-taken"
