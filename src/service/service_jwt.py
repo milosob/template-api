@@ -183,13 +183,13 @@ class ServiceJwt:
         except jose.JWTError:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
             )
 
         if access_token_payload["iss"] not in self.verify_ids:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
             )
 
         date_now: datetime.datetime
@@ -214,7 +214,7 @@ class ServiceJwt:
             if scope not in scopes:
                 raise src.error.error.Error(
                     code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                    type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_ERROR
+                    type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
                 )
 
         return access_token_payload
@@ -256,13 +256,13 @@ class ServiceJwt:
         except jose.JWTError:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
             )
 
         if access_token_payload["iss"] not in self.verify_ids:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
             )
 
         try:
@@ -294,13 +294,13 @@ class ServiceJwt:
         except jose.JWTError:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
             )
 
         if refresh_token_payload["iss"] not in self.verify_ids:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_ERROR
+                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
             )
 
         date_now: datetime.datetime
@@ -325,7 +325,7 @@ class ServiceJwt:
             if scope not in scopes:
                 raise src.error.error.Error(
                     code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                    type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_ERROR
+                    type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
                 )
 
         return refresh_token_payload

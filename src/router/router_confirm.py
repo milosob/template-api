@@ -126,7 +126,7 @@ async def post_confirm(
         if not confirm_guard:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_400_BAD_REQUEST,
-                type=src.error.error_type.CONFIRM_TOKEN_FAILURE
+                type=src.error.error_type.CONFIRM_TOKEN_INVALID
             )
 
         db_confirm_model.confirmed_at = date_now
@@ -148,5 +148,5 @@ async def post_confirm(
         # Programmer error.
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
-            type=src.error.error_type.CONFIRM_TOKEN_FAILURE
+            type=src.error.error_type.CONFIRM_TOKEN_INVALID
         )
