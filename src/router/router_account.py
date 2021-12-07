@@ -254,6 +254,10 @@ async def post_account_authenticate(
             "model": src.dto.dto_account.DtoPostAccountAuthenticateRefreshOut,
             "description": "Operation successful."
         },
+        fastapi.status.HTTP_400_BAD_REQUEST: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
             "model": src.dto.dto_error.DtoErrorApiOut,
             "description": "Error."
@@ -283,6 +287,8 @@ async def post_account_authenticate_refresh(
         refresh_token=post_account_authenticate_refresh_in.refresh_token,
         refresh_token_required_scopes=[]
     )
+
+    # TODO After token verification update token data based on current db state.
 
     sub: str
     sub = payload["sub"]
