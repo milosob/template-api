@@ -142,3 +142,32 @@ class DtoPostAccountAuthenticateRefreshIn(DtoPostAccountAuthenticateRefreshInBas
 
 class DtoPostAccountAuthenticateRefreshOut(DtoPostAccountAuthenticateRefreshOutBase):
     pass
+
+
+# POST ACCOUNT PASSWORD FORGET PRIVATE
+
+class DtoPostAccountPasswordForgetInBase(pydantic.BaseModel):
+    username: str
+
+    @pydantic.validator("username")
+    def validator_username(
+            cls,
+            v: str
+    ) -> str:
+        # TODO
+
+        return v
+
+
+class DtoPostAccountPasswordForgetOutBase(pydantic.BaseModel):
+    pass
+
+
+# POST ACCOUNT PASSWORD FORGET PUBLIC
+
+class DtoPostAccountPasswordForgetIn(DtoPostAccountPasswordForgetInBase):
+    pass
+
+
+class DtoPostAccountPasswordForgetOut(DtoPostAccountPasswordForgetOutBase):
+    pass

@@ -284,6 +284,7 @@ async def post_account_authenticate_refresh(
     payload: dict
     payload = state_app.service.service_jwt.verify_refresh(
         access_token=post_account_authenticate_refresh_in.access_token,
+        access_token_required_scopes=[],
         refresh_token=post_account_authenticate_refresh_in.refresh_token,
         refresh_token_required_scopes=[]
     )
@@ -313,3 +314,53 @@ async def post_account_authenticate_refresh(
         access_token=access_token,
         refresh_token=refresh_token
     )
+
+
+@router.post(
+    path="/password/forget",
+    summary="Account password forget.",
+    status_code=fastapi.status.HTTP_200_OK,
+    responses={
+        fastapi.status.HTTP_200_OK: {
+            "model": src.dto.dto_account.DtoPostAccountPasswordForgetOut,
+            "description": "Operation successful."
+        },
+        fastapi.status.HTTP_400_BAD_REQUEST: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_401_UNAUTHORIZED: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": src.dto.dto_error.DtoErrorApiOut,
+            "description": "Error."
+        }
+    }
+)
+async def post_account_password_forget(
+        request: fastapi.Request,
+        post_account_password_forget_in: src.dto.dto_account.DtoPostAccountPasswordForgetIn = fastapi.Body(
+            ...
+        ),
+        state_app: src.state.state_app.StateApp = fastapi.Depends(
+            src.depends.depends_state_app.depends
+        )
+):
+    db_account_model: src.database.account.database_account_model.DatabaseAccountModel
+
+    try:
+        # Retrieve account from database.
+        db_account_model = await state_app.database.database_account.find_by_email(
+            email=post_account_password_forget_in.username
+        )
+    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+        # User does not exist.
+        return src.dto.dto_account.DtoPostAccountPasswordForgetOut()
+
+    # Issue JWT password-recover token.

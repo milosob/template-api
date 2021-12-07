@@ -64,8 +64,11 @@
                 "verify_algs": [
                     "HS256"
                 ],
-                "access_lifetime": 86400,
-                "refresh_lifetime": 604800,
+                "lifetime": {
+                    "access": 86400,
+                    "refresh": 604800,
+                    "password_recover": 600
+                },
                 "scopes_god": [
                     "root"
                 ]

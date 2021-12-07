@@ -22,12 +22,15 @@ class ServiceJwt:
     verify_keys: typing.List[str]
     verify_algs: typing.List[str]
 
-    access_lifetime: int
-    refresh_lifetime: int
-
-    verify_options: dict
+    lifetime_access: int
+    lifetime_refresh: int
+    lifetime_password_recover: int
 
     scopes_god: typing.List[str]
+
+    verify_access_options: dict
+    verify_refresh_options: dict
+    verify_default_options: dict
 
     def __init__(
             self,
@@ -43,17 +46,76 @@ class ServiceJwt:
         self.verify_keys = config["verify_keys"]
         self.verify_algs = config["verify_algs"]
 
-        self.access_lifetime = config["access_lifetime"]
-        self.refresh_lifetime = config["refresh_lifetime"]
+        self.lifetime_access = config["lifetime"]["access"]
+        self.lifetime_refresh = config["lifetime"]["refresh"]
+        self.lifetime_password_recover = config["lifetime"]["password_recover"]
 
         self.scopes_god = config["scopes_god"]
+        self.verify_access_options = {
+            "verify_signature": True,
+            "verify_aud": False,
+            "verify_iat": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iss": False,
+            "verify_sub": False,
+            "verify_jti": False,
+            "verify_at_hash": False,
+            "require_aud": False,
+            "require_iat": True,
+            "require_exp": True,
+            "require_nbf": False,
+            "require_iss": True,
+            "require_sub": True,
+            "require_jti": False,
+            "require_at_hash": False
+        }
+        self.verify_refresh_options = {
+            "verify_signature": True,
+            "verify_aud": False,
+            "verify_iat": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iss": False,
+            "verify_sub": False,
+            "verify_jti": False,
+            "verify_at_hash": True,
+            "require_aud": False,
+            "require_iat": True,
+            "require_exp": True,
+            "require_nbf": False,
+            "require_iss": True,
+            "require_sub": True,
+            "require_jti": False,
+            "require_at_hash": True
+        }
+        self.verify_default_options = {
+            "verify_signature": True,
+            "verify_aud": False,
+            "verify_iat": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iss": False,
+            "verify_sub": False,
+            "verify_jti": False,
+            "verify_at_hash": False,
+            "require_aud": False,
+            "require_iat": True,
+            "require_exp": True,
+            "require_nbf": False,
+            "require_iss": True,
+            "require_sub": True,
+            "require_jti": False,
+            "require_at_hash": False
+        }
 
     def issue(
             self,
             sub: str,
             data: dict,
             lifetime: int,
-            scopes: typing.List[str]
+            scopes: typing.List[str],
+            access_token: str = None
     ) -> str:
         date_now: datetime.datetime
         date_now = datetime.datetime.utcnow()
@@ -74,10 +136,115 @@ class ServiceJwt:
         token = jose.jwt.encode(
             claims=payload,
             key=self.issue_key,
-            algorithm=self.issue_alg
+            algorithm=self.issue_alg,
+            headers=None,
+            access_token=access_token
         )
 
         return token
+
+    def verify_token(
+            self,
+            token: str,
+            error_type: str,
+            **verify_token_kwargs
+    ):
+        try:
+            # noinspection PyTypeChecker
+            return jose.jwt.decode(
+                token=token,
+                key=self.verify_keys,
+                algorithms=self.verify_algs,
+                **verify_token_kwargs
+            )
+        except jose.JWTError:
+            raise src.error.error.Error(
+                code=fastapi.status.HTTP_401_UNAUTHORIZED,
+                type=error_type
+            )
+
+    def verify_iss(
+            self,
+            payload: dict,
+            error_type: str
+    ) -> None:
+        if payload["iss"] not in self.verify_ids:
+            raise src.error.error.Error(
+                code=fastapi.status.HTTP_401_UNAUTHORIZED,
+                type=error_type
+            )
+
+    def verify_exp(
+            self,
+            payload: dict,
+            error_type: str,
+            date_now: datetime.datetime = datetime.datetime.utcnow()
+    ) -> None:
+        if calendar.timegm(date_now.utctimetuple()) > payload["exp"]:
+            raise src.error.error.Error(
+                code=fastapi.status.HTTP_401_UNAUTHORIZED,
+                type=error_type
+            )
+
+    def verify_required_scopes(
+            self,
+            payload: dict,
+            error_type: str,
+            required_scopes: typing.List[str]
+    ) -> None:
+        scopes: typing.List[str]
+        scopes = payload.get("scopes", [])
+
+        # Check for god mode.
+        for scope in self.scopes_god:
+            if scope in scopes:
+                return
+
+        # Check for required scopes.
+        for scope in required_scopes:
+            if scope not in scopes:
+                raise src.error.error.Error(
+                    code=fastapi.status.HTTP_401_UNAUTHORIZED,
+                    type=error_type
+                )
+
+    def verify(
+            self,
+            token: str,
+            required_scopes: typing.List[str],
+            verify_token_error_type: typing.Union[str, None],
+            verify_iss_error_type: typing.Union[str, None],
+            verify_exp_error_type: typing.Union[str, None],
+            verify_scopes_error_type: typing.Union[str, None],
+            **verify_token_kwargs
+    ) -> dict:
+        payload: dict
+        payload = self.verify_token(
+            token=token,
+            error_type=verify_token_error_type,
+            **verify_token_kwargs
+        )
+
+        if verify_iss_error_type:
+            self.verify_iss(
+                payload=payload,
+                error_type=verify_iss_error_type
+            )
+
+        if verify_exp_error_type:
+            self.verify_exp(
+                payload=payload,
+                error_type=verify_exp_error_type
+            )
+
+        if verify_scopes_error_type:
+            self.verify_required_scopes(
+                payload=payload,
+                error_type=verify_scopes_error_type,
+                required_scopes=required_scopes
+            )
+
+        return payload
 
     def issue_access(
             self,
@@ -85,33 +252,32 @@ class ServiceJwt:
             data: dict,
             scopes: typing.List[str]
     ) -> str:
-        date_now: datetime.datetime
-        date_now = datetime.datetime.utcnow()
-
-        payload: dict
-        payload = {
-            "iss": self.issue_id,
-            "sub": sub,
-            "iat": date_now,
-            "exp": date_now + datetime.timedelta(
-                seconds=self.access_lifetime
-            ),
-            "data": data,
-            "scopes": scopes + [
-                "access"
-            ]
-        }
-
-        token: str
-        token = jose.jwt.encode(
-            claims=payload,
-            key=self.issue_key,
-            algorithm=self.issue_alg,
-            headers=None,
+        return self.issue(
+            sub=sub,
+            data=data,
+            lifetime=self.lifetime_access,
+            scopes=scopes + [
+                "access_token"
+            ],
             access_token=None
         )
 
-        return token
+    def verify_access(
+            self,
+            access_token: str,
+            access_token_required_scopes: typing.List[str]
+    ) -> dict:
+        return self.verify(
+            token=access_token,
+            required_scopes=access_token_required_scopes + [
+                "access"
+            ],
+            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_exp_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_EXPIRED,
+            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            options=self.verify_access_options
+        )
 
     def issue_refresh(
             self,
@@ -120,212 +286,79 @@ class ServiceJwt:
             scopes: typing.List[str],
             access_token: str
     ) -> str:
-        date_now: datetime.datetime
-        date_now = datetime.datetime.utcnow()
-
-        payload: dict
-        payload = {
-            "iss": self.issue_id,
-            "sub": sub,
-            "iat": date_now,
-            "exp": date_now + datetime.timedelta(
-                seconds=self.refresh_lifetime
-            ),
-            "data": data,
-            "scopes": scopes + [
-                "refresh"
-            ]
-        }
-
-        token: str
-        token = jose.jwt.encode(
-            claims=payload,
-            key=self.issue_key,
-            algorithm=self.issue_alg,
-            headers=None,
+        return self.issue(
+            sub=sub,
+            data=data,
+            lifetime=self.lifetime_refresh,
+            scopes=scopes + [
+                "refresh_token"
+            ],
             access_token=access_token
         )
-
-        return token
-
-    def verify_access(
-            self,
-            access_token: str,
-            access_token_required_scopes: typing.List[str]
-    ) -> dict:
-        access_token_payload: dict
-
-        try:
-            access_token_payload = jose.jwt.decode(
-                token=access_token,
-                key=self.verify_keys,
-                algorithms=self.verify_algs,
-                options={
-                    "verify_signature": True,
-                    "verify_aud": False,
-                    "verify_iat": False,
-                    "verify_exp": False,
-                    "verify_nbf": False,
-                    "verify_iss": False,
-                    "verify_sub": False,
-                    "verify_jti": False,
-                    "verify_at_hash": False,
-                    "require_aud": False,
-                    "require_iat": True,
-                    "require_exp": True,
-                    "require_nbf": False,
-                    "require_iss": True,
-                    "require_sub": True,
-                    "require_jti": False,
-                    "require_at_hash": False
-                }
-            )
-        except jose.JWTError:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
-            )
-
-        if access_token_payload["iss"] not in self.verify_ids:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
-            )
-
-        date_now: datetime.datetime
-        date_now = datetime.datetime.utcnow()
-
-        if calendar.timegm(date_now.utctimetuple()) > access_token_payload["exp"]:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_EXPIRED
-            )
-
-        scopes: typing.List[str]
-        scopes = access_token_payload.get("scopes", [])
-
-        # Check for god mode.
-        for scope in self.scopes_god:
-            if scope in scopes:
-                return access_token_payload
-
-        # Check for required scopes.
-        for scope in access_token_required_scopes:
-            if scope not in scopes:
-                raise src.error.error.Error(
-                    code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                    type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
-                )
-
-        return access_token_payload
 
     def verify_refresh(
             self,
             access_token: str,
+            access_token_required_scopes: typing.List[str],
             refresh_token: str,
             refresh_token_required_scopes: typing.List[str]
     ) -> dict:
-        access_token_payload: dict
-        refresh_token_payload: dict
 
-        try:
-            access_token_payload = jose.jwt.decode(
-                token=access_token,
-                key=self.verify_keys,
-                algorithms=self.verify_algs,
-                options={
-                    "verify_signature": True,
-                    "verify_aud": False,
-                    "verify_iat": False,
-                    "verify_exp": False,
-                    "verify_nbf": False,
-                    "verify_iss": False,
-                    "verify_sub": False,
-                    "verify_jti": False,
-                    "verify_at_hash": False,
-                    "require_aud": False,
-                    "require_iat": True,
-                    "require_exp": True,
-                    "require_nbf": False,
-                    "require_iss": True,
-                    "require_sub": True,
-                    "require_jti": False,
-                    "require_at_hash": False
-                }
-            )
-        except jose.JWTError:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
-            )
+        self.verify(
+            token=access_token,
+            required_scopes=access_token_required_scopes + [
+                "access"
+            ],
+            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            # Skip expiration verification.
+            verify_exp_error_type=None,
+            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            options=self.verify_access_options
+        )
 
-        if access_token_payload["iss"] not in self.verify_ids:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID
-            )
+        return self.verify(
+            token=refresh_token,
+            required_scopes=refresh_token_required_scopes + [
+                "refresh"
+            ],
+            verify_token_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
+            verify_iss_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
+            verify_exp_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_EXPIRED,
+            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
+            options=self.verify_refresh_options,
+            access_token=access_token
+        )
 
-        try:
-            refresh_token_payload = jose.jwt.decode(
-                token=refresh_token,
-                key=self.verify_keys,
-                algorithms=self.verify_algs,
-                options={
-                    "verify_signature": True,
-                    "verify_aud": False,
-                    "verify_iat": False,
-                    "verify_exp": False,
-                    "verify_nbf": False,
-                    "verify_iss": False,
-                    "verify_sub": False,
-                    "verify_jti": False,
-                    "verify_at_hash": True,
-                    "require_aud": False,
-                    "require_iat": True,
-                    "require_exp": True,
-                    "require_nbf": False,
-                    "require_iss": True,
-                    "require_sub": True,
-                    "require_jti": False,
-                    "require_at_hash": True
-                },
-                access_token=access_token
-            )
-        except jose.JWTError:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
-            )
+    def issue_password_recover(
+            self,
+            sub: str,
+            data: dict,
+            scopes: typing.List[str]
+    ) -> str:
+        return self.issue(
+            sub=sub,
+            data=data,
+            lifetime=self.lifetime_refresh,
+            scopes=scopes + [
+                "password_recover"
+            ],
+            access_token=None
+        )
 
-        if refresh_token_payload["iss"] not in self.verify_ids:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
-            )
-
-        date_now: datetime.datetime
-        date_now = datetime.datetime.utcnow()
-
-        if calendar.timegm(date_now.utctimetuple()) > refresh_token_payload["exp"]:
-            raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_EXPIRED
-            )
-
-        scopes: typing.List[str]
-        scopes = refresh_token_payload.get("scopes", [])
-
-        # Check for god mode.
-        for scope in self.scopes_god:
-            if scope in scopes:
-                return refresh_token_payload
-
-        # Check for required scopes.
-        for scope in refresh_token_required_scopes:
-            if scope not in scopes:
-                raise src.error.error.Error(
-                    code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                    type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID
-                )
-
-        return refresh_token_payload
+    def verify_password_recover(
+            self,
+            password_recover_token: str,
+            password_recover_required_scopes: typing.List[str]
+    ) -> dict:
+        return self.verify(
+            token=password_recover_token,
+            required_scopes=password_recover_required_scopes + [
+                "password_recover"
+            ],
+            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_exp_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
+            options=self.verify_default_options
+        )
