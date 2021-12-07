@@ -6,12 +6,8 @@ import fastapi
 import fastapi.middleware.cors
 import hypercorn.config
 import hypercorn.asyncio
-import starlette.middleware.base
-import starlette.middleware.cors
 
 import src.handler.handler_error
-import src.middleware.middleware_request_state
-import src.middleware.middleware_request_state_lang
 import src.router.router_account
 import src.router.router_confirm
 import src.state.state_app
@@ -50,14 +46,7 @@ def run(
     # app middleware internal after
     app_middleware.extend(
         [
-            fastapi.middleware.Middleware(
-                cls=starlette.middleware.base.BaseHTTPMiddleware,
-                dispatch=src.middleware.middleware_request_state.middleware
-            ),
-            fastapi.middleware.Middleware(
-                cls=starlette.middleware.base.BaseHTTPMiddleware,
-                dispatch=src.middleware.middleware_request_state_lang.middleware
-            )
+
         ]
     )
 

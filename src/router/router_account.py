@@ -150,7 +150,6 @@ async def post_account_register(
             }
         )
     except Exception as e:
-        print(e)
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE

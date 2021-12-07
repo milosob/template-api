@@ -9,7 +9,6 @@ import src.database.account.database_account_model
 import src.database.confirm.database_confirm_driver_base
 import src.database.confirm.database_confirm_model
 import src.depends.depends_state_app
-import src.depends.depends_state_request
 import src.dto.dto_account
 import src.dto.dto_confirm
 import src.error.error
@@ -57,9 +56,6 @@ async def post_confirm(
         ),
         state_app: src.state.state_app.StateApp = fastapi.Depends(
             src.depends.depends_state_app.depends
-        ),
-        state_request: src.state.state_request.StateRequest = fastapi.Depends(
-            src.depends.depends_state_request.depends
         )
 ):
     db_confirm_model: src.database.confirm.database_confirm_model.DatabaseConfirmModel
