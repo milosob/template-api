@@ -30,7 +30,7 @@ router = fastapi.APIRouter(
     status_code=fastapi.status.HTTP_201_CREATED,
     responses={
         fastapi.status.HTTP_201_CREATED: {
-            "model": src.dto.account.PostAccountRegisterOut,
+            "model": src.dto.account.AccountPostRegisterOut,
             "description": "Resource created."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
@@ -47,10 +47,10 @@ router = fastapi.APIRouter(
         }
     }
 )
-async def post_account_register(
+async def account_post_register(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_register_in: src.dto.account.PostAccountRegisterIn = fastapi.Body(
+        account_register_in: src.dto.account.AccountPostRegisterIn = fastapi.Body(
             ...
         )
 ):
@@ -123,7 +123,7 @@ async def post_account_register(
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER
         )
 
-    return src.dto.account.PostAccountRegisterOut(
+    return src.dto.account.AccountPostRegisterOut(
         username=account_register_in.username,
         password=None
     )
@@ -135,7 +135,7 @@ async def post_account_register(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.account.PostAccountAuthenticateOut,
+            "model": src.dto.account.AccountPostAuthenticateOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
@@ -152,10 +152,10 @@ async def post_account_register(
         }
     }
 )
-async def post_account_authenticate(
+async def account_post_authenticate(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        post_account_authenticate_in: src.dto.account.PostAccountAuthenticateIn = fastapi.Body(
+        account_post_authenticate_in: src.dto.account.AccountPostAuthenticateIn = fastapi.Body(
             ...
         )
 ):
@@ -164,7 +164,7 @@ async def post_account_authenticate(
     try:
         # Find account.
         account = await app_state.database.account.find_by_email(
-            email=post_account_authenticate_in.username
+            email=account_post_authenticate_in.username
         )
     except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(
@@ -174,7 +174,7 @@ async def post_account_authenticate(
 
     # Verify password.
     if not app_state.service.password.password_verify(
-            password=post_account_authenticate_in.password,
+            password=account_post_authenticate_in.password,
             password_hash=account.authentication.password_reg.primary.password
     ):
         raise src.error.error.Error(
@@ -204,7 +204,7 @@ async def post_account_authenticate(
         access_token=access_token
     )
 
-    return src.dto.account.PostAccountAuthenticateOut(
+    return src.dto.account.AccountPostAuthenticateOut(
         access_token=access_token,
         refresh_token=refresh_token
     )
@@ -216,7 +216,7 @@ async def post_account_authenticate(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.account.PostAccountAuthenticateRefreshOut,
+            "model": src.dto.account.AccountPostAuthenticateRefreshOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
@@ -237,16 +237,16 @@ async def post_account_authenticate(
         }
     }
 )
-async def post_account_authenticate_refresh(
+async def account_post_authenticate_refresh(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        post_account_authenticate_refresh_in: src.dto.account.PostAccountAuthenticateRefreshIn = fastapi.Body(
+        account_post_authenticate_refresh_in: src.dto.account.AccountPostAuthenticateRefreshIn = fastapi.Body(
             ...
         )
 ):
     access_token_payload: dict
     access_token_payload = app_state.service.jwt.verify(
-        token=post_account_authenticate_refresh_in.access_token,
+        token=account_post_authenticate_refresh_in.access_token,
         required_scopes=["type:access"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
@@ -258,14 +258,14 @@ async def post_account_authenticate_refresh(
 
     refresh_token_payload: dict
     refresh_token_payload = app_state.service.jwt.verify(
-        token=post_account_authenticate_refresh_in.refresh_token,
+        token=account_post_authenticate_refresh_in.refresh_token,
         required_scopes=["type:refresh"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_SCOPES,
         options=app_state.service.jwt.verify_refresh_options,
-        access_token=post_account_authenticate_refresh_in.access_token
+        access_token=account_post_authenticate_refresh_in.access_token
     )
 
     sub: str
@@ -293,7 +293,7 @@ async def post_account_authenticate_refresh(
         access_token=access_token
     )
 
-    return src.dto.account.PostAccountAuthenticateRefreshOut(
+    return src.dto.account.AccountPostAuthenticateRefreshOut(
         access_token=access_token,
         refresh_token=refresh_token
     )
@@ -305,7 +305,7 @@ async def post_account_authenticate_refresh(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.account.PostAccountPasswordForgetOut,
+            "model": src.dto.account.AccountPostPasswordForgetOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
@@ -326,10 +326,10 @@ async def post_account_authenticate_refresh(
         }
     }
 )
-async def post_account_password_forget(
+async def account_post_password_forget(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        post_account_password_forget_in: src.dto.account.PostAccountPasswordForgetIn = fastapi.Body(
+        account_post_password_forget_in: src.dto.account.AccountPostPasswordForgetIn = fastapi.Body(
             ...
         )
 ):
@@ -338,14 +338,14 @@ async def post_account_password_forget(
     try:
         # Find account.
         account = await app_state.database.account.find_by_email(
-            email=post_account_password_forget_in.username
+            email=account_post_password_forget_in.username
         )
     except src.database.error.error_not_found.ErrorNotFound:
         # Account does not exist.
         await asyncio.sleep(
             delay=1
         )
-        return src.dto.account.PostAccountPasswordForgetOut()
+        return src.dto.account.AccountPostPasswordForgetOut()
 
     # Build recover context to auto revoke token if password was changed.
     # It's possible to request many recovery links, however as soon password will be changed mac verification will fail.
@@ -387,7 +387,7 @@ async def post_account_password_forget(
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET
         )
 
-    return src.dto.account.PostAccountPasswordForgetOut()
+    return src.dto.account.AccountPostPasswordForgetOut()
 
 
 @router.post(
@@ -396,7 +396,7 @@ async def post_account_password_forget(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.account.PostAccountPasswordRecoverOut,
+            "model": src.dto.account.AccountPostPasswordRecoverOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
@@ -417,11 +417,11 @@ async def post_account_password_forget(
         }
     }
 )
-async def post_account_password_recover(
+async def account_post_password_recover(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         password_recover_token: str = src.depends.bearer_token.depends(),
-        post_account_password_recover_in: src.dto.account.PostAccountPasswordRecoverIn = fastapi.Body(
+        account_post_password_recover_in: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(
             ...
         )
 ):
@@ -494,7 +494,7 @@ async def post_account_password_recover(
 
     while True:
         new_password_hash = app_state.service.password.password_hash(
-            post_account_password_recover_in.password
+            account_post_password_recover_in.password
         )
 
         # The chance it will not break is like 1 / ( 2**128 * (password repetition probability))
@@ -515,4 +515,4 @@ async def post_account_password_recover(
         )
 
     # Password successfully changed.
-    return src.dto.account.PostAccountPasswordRecoverOut()
+    return src.dto.account.AccountPostPasswordRecoverOut()
