@@ -24,9 +24,8 @@ class ServiceLocale:
         locales_preference: typing.List[tuple]
         locales_preference = []
 
-        try:
-
-            for entry in value.split(","):
+        for entry in value.split(","):
+            try:
                 locale: str
                 quality: str
 
@@ -36,16 +35,12 @@ class ServiceLocale:
                     locales_preference.append((locale, 1.0))
                 else:
                     _, _, preference = quality.partition("=")
-
-                    value = float(preference)
-                    value = min(value, 1.0)
-
-                    locales_preference.append((locale, value))
-
-        except ValueError:
-            return self.default
-        except IndexError:
-            return self.default
+                    # Use only first 3 characters from preference.
+                    locales_preference.append((locale, float(preference[:3])))
+            except ValueError:
+                return self.default
+            except IndexError:
+                return self.default
 
         locales_preference.sort(
             key=lambda x: x[1],
