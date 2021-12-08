@@ -68,9 +68,25 @@ class ServiceJwt:
             "require_jti": False,
             "require_at_hash": False
         }
-        self.verify_refresh_options = self.verify_default_options
-        self.verify_refresh_options["verify_at_hash"] = True
-        self.verify_refresh_options["require_at_hash"] = True
+        self.verify_refresh_options = {
+            "verify_signature": True,
+            "verify_aud": False,
+            "verify_iat": False,
+            "verify_exp": False,
+            "verify_nbf": False,
+            "verify_iss": False,
+            "verify_sub": False,
+            "verify_jti": False,
+            "verify_at_hash": True,
+            "require_aud": False,
+            "require_iat": True,
+            "require_exp": True,
+            "require_nbf": False,
+            "require_iss": True,
+            "require_sub": True,
+            "require_jti": False,
+            "require_at_hash": True
+        }
 
     def issue(
             self,
