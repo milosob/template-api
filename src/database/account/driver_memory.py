@@ -4,8 +4,8 @@ import typing
 
 import src.database.account.driver_base
 import src.database.account.model
-import src.database.error.database_error_conflict
-import src.database.error.database_error_not_found
+import src.database.error.error_conflict
+import src.database.error.error_not_found
 
 
 class DriverMemory(src.database.account.driver_base.DriverBase):
@@ -25,7 +25,7 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
             if entry.identifier == identifier:
                 return entry
 
-        raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
+        raise src.database.error.error_not_found.ErrorNotFound()
 
     async def find_by_email(
             self,
@@ -36,7 +36,7 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
                 if email_record.email == email:
                     return entry
 
-        raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
+        raise src.database.error.error_not_found.ErrorNotFound()
 
     async def insert(
             self,
@@ -46,8 +46,8 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
             _ = await self.find_by_email(
                 email=model.email.reg.primary.email
             )
-            raise src.database.error.database_error_conflict.DatabaseErrorConflict()
-        except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+            raise src.database.error.error_conflict.ErrorConflict()
+        except src.database.error.error_not_found.ErrorNotFound:
             pass
 
         date_now: datetime.datetime
@@ -79,7 +79,7 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
                 self.impl.append(model)
                 return model
 
-        raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
+        raise src.database.error.error_not_found.ErrorNotFound()
 
     async def remove(
             self,
@@ -90,4 +90,4 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
                 self.impl.remove(entry)
                 return entry
 
-        raise src.database.error.database_error_not_found.DatabaseErrorNotFound()
+        raise src.database.error.error_not_found.ErrorNotFound()

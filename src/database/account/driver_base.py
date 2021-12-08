@@ -1,5 +1,5 @@
 import src.database.account.model
-import src.database.error.database_error_not_implemented
+import src.database.error.error_not_implemented
 
 
 class DriverBase:
@@ -13,28 +13,28 @@ class DriverBase:
             self,
             identifier: str
     ) -> src.database.account.model.Account:
-        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+        raise src.database.error.error_not_implemented.ErrorNotImplemented()
 
     async def find_by_email(
             self,
             email: str
     ) -> src.database.account.model.Account:
-        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+        raise src.database.error.error_not_implemented.ErrorNotImplemented()
 
     async def insert(
             self,
             model: src.database.account.model.Account
     ) -> src.database.account.model.Account:
-        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+        raise src.database.error.error_not_implemented.ErrorNotImplemented()
 
     async def update(
             self,
             model: src.database.account.model.Account
     ) -> src.database.account.model.Account:
-        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+        raise src.database.error.error_not_implemented.ErrorNotImplemented()
 
     async def remove(
             self,
             model: src.database.account.model.Account
     ) -> src.database.account.model.Account:
-        raise src.database.error.database_error_not_implemented.DatabaseErrorNotImplemented()
+        raise src.database.error.error_not_implemented.ErrorNotImplemented()

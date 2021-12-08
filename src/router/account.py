@@ -7,8 +7,8 @@ import fastapi
 import fastapi.security
 
 import src.app_state
-import src.database.error.database_error_conflict
-import src.database.error.database_error_not_found
+import src.database.error.error_conflict
+import src.database.error.error_not_found
 import src.database.account.driver_base
 import src.database.account.model
 import src.depends.bearer_token
@@ -71,7 +71,7 @@ async def post_account_register(
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
         )
 
-    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+    except src.database.error.error_not_found.ErrorNotFound:
         pass
 
     # Assign email.
@@ -95,7 +95,7 @@ async def post_account_register(
         account = await app_state.database.account.insert(
             model=account
         )
-    except src.database.error.database_error_conflict.DatabaseErrorConflict:
+    except src.database.error.error_conflict.ErrorConflict:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
@@ -166,7 +166,7 @@ async def post_account_authenticate(
         account = await app_state.database.account.find_by_email(
             email=post_account_authenticate_in.username
         )
-    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+    except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
             type=src.error.error_type.ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS
@@ -340,7 +340,7 @@ async def post_account_password_forget(
         account = await app_state.database.account.find_by_email(
             email=post_account_password_forget_in.username
         )
-    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+    except src.database.error.error_not_found.ErrorNotFound:
         # Account does not exist.
         await asyncio.sleep(
             delay=1
@@ -466,7 +466,7 @@ async def post_account_password_recover(
         account = await app_state.database.account.find_by_identifier(
             identifier=identifier
         )
-    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+    except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
             type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID
@@ -508,7 +508,7 @@ async def post_account_password_recover(
         account = await app_state.database.account.update(
             account
         )
-    except src.database.error.database_error_not_found.DatabaseErrorNotFound:
+    except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE
