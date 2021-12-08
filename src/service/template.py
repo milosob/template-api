@@ -34,3 +34,12 @@ class ServiceTemplate:
             self.mail.get_template("account_register.subject.text"),
             self.mail.get_template("account_register.body.html")
         )
+
+    @property
+    def mail_account_password_recover(
+            self
+    ) -> typing.Tuple[jinja2.Template, jinja2.Template]:
+        return (
+            self.mail.get_template("account_password_recover.subject.text"),
+            self.mail.get_template("account_password_recover.body.html")
+        )

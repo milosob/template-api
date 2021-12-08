@@ -430,12 +430,16 @@ async def account_post_password_forget(
         sub=sub,
         data=data,
         lifetime=app_state.service.jwt.lifetime_password_recover,
-        scopes=["type:password-recover"]
+        scopes=["type:account-password-recover"]
     )
 
     try:
-        pass
-        # TODO Send email with password recovery link.
+        await app_state.service.mail.send_template(
+            to={account.email.reg.primary.email: ""},
+            locale=app_state.service.locale.by_request(request),
+            template=app_state.service.template.mail_account_password_recover,
+            token=password_recover_token
+        )
     except Exception:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -483,7 +487,7 @@ async def account_post_password_recover(
     payload: dict
     payload = app_state.service.jwt.verify(
         token=password_recover_token,
-        required_scopes=["type:password-recover"],
+        required_scopes=["type:account-password-recover"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
