@@ -1,14 +1,12 @@
-import typing
-
 import passlib.hash
 
 
 class ServicePassword:
-    config: typing.Dict
+    config: dict
 
     def __init__(
             self,
-            config: typing.Dict
+            config: dict
     ) -> None:
         self.config = config
 
@@ -20,7 +18,7 @@ class ServicePassword:
             salt_size=16,
             digest_size=32
         ).hash(
-            password
+            secret=password
         )
 
     @staticmethod
@@ -29,6 +27,6 @@ class ServicePassword:
             password_hash: str
     ) -> bool:
         return passlib.hash.argon2.verify(
-            password,
-            password_hash
+            secret=password,
+            hash=password_hash
         )

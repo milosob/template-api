@@ -2,6 +2,7 @@ import src.service.mail
 import src.service.jwt
 import src.service.locale
 import src.service.password
+import src.service.template
 
 
 class AppService:
@@ -28,4 +29,7 @@ class AppService:
         )
         self.password = src.service.password.ServicePassword(
             config=config["password"]
+        )
+        self.template = src.service.template.ServiceTemplate(
+            config=config["template"]
         )

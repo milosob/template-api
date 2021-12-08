@@ -25,6 +25,7 @@ class ServiceJwt:
     lifetime_access: int
     lifetime_refresh: int
     lifetime_password_recover: int
+    lifetime_account_register: int
 
     verify_access_options: dict
     verify_refresh_options: dict
@@ -47,6 +48,7 @@ class ServiceJwt:
         self.lifetime_access = config["lifetime"]["access"]
         self.lifetime_refresh = config["lifetime"]["refresh"]
         self.lifetime_password_recover = config["lifetime"]["password_recover"]
+        self.lifetime_account_register = config["lifetime"]["account_register"]
 
         self.verify_access_options = {
             "verify_signature": True,

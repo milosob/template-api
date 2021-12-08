@@ -66,10 +66,12 @@
                 "lifetime": {
                     "access": 86400,
                     "refresh": 604800,
-                    "password_recover": 600
+                    "password_recover": 600,
+                    "account_register": 900
                 }
             },
-            "password": {}
+            "password": {},
+            "template": {}
         }
     }
 }

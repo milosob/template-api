@@ -101,23 +101,29 @@ async def account_post_register(
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
         )
 
+    sub: str
+    sub = account.identifier
+    data: dict
+    data = {}
+
+    # Issue new account register token.
+    account_register_token: str
+    account_register_token = app_state.service.jwt.issue(
+        sub=sub,
+        data=data,
+        lifetime=app_state.service.jwt.lifetime_account_register,
+        scopes=["type:account-register-confirm"]
+    )
+
     try:
-        await app_state.service.mail.send_template_account_register_confirm(
-            language=app_state.service.locale.by_request(
-                request=request
-            ),
-            parameters={
-                "to": {
-                    account.email.reg.primary.email: None
-                },
-                "subject": {},
-                "body": {
-                    # TODO
-                    "token": "tokne"
-                }
-            }
+        await app_state.service.mail.send_template(
+            to={account.email.reg.primary.email: ""},
+            locale=app_state.service.locale.by_request(request),
+            template=app_state.service.template.mail_account_register,
+            token=account_register_token
         )
     except Exception as e:
+        print(e)
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER
@@ -375,7 +381,7 @@ async def account_post_password_forget(
         sub=sub,
         data=data,
         lifetime=app_state.service.jwt.lifetime_password_recover,
-        scopes=["type:password_recover"]
+        scopes=["type:password-recover"]
     )
 
     try:
@@ -428,7 +434,7 @@ async def account_post_password_recover(
     payload: dict
     payload = app_state.service.jwt.verify(
         token=password_recover_token,
-        required_scopes=["type:password_recover"],
+        required_scopes=["type:password-recover"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,

@@ -1,17 +1,16 @@
 import aiosmtplib
 import email.message
+import email.utils
 import ssl
 import typing
 
-import src.template.template_email
-import src.template.template_email_account_register_confirm_pl
+import jinja2
 
 
 class ServiceMail:
     config: dict
     from_: dict
 
-    templates: dict
     send_cb: typing.Callable[[email.message.EmailMessage], typing.Coroutine[typing.Any, typing.Any, None]]
 
     smtp_host: str
@@ -78,17 +77,6 @@ class ServiceMail:
                 self.smtp_tls = False
                 self.smtp_tls_context = None
 
-        templates_pl: dict
-        templates_pl = {
-            "account-register-confirm": src.template.template_email_account_register_confirm_pl.template
-        }
-
-        self.templates = {
-            "pl": templates_pl,
-            "en": templates_pl,
-            "default": templates_pl
-        }
-
     async def _send_smtp(
             self,
             message: email.message.EmailMessage
@@ -109,38 +97,62 @@ class ServiceMail:
 
     async def send_template(
             self,
-            language: str,
-            parameters: dict,
-            identifier: str
+            to: dict = None,
+            bcc: dict = None,
+            locale: str = None,
+            template: typing.Tuple[jinja2.Template, jinja2.Template] = None,
+            **template_parameters
     ) -> None:
+        email_message: email.message.EmailMessage
+        email_message = email.message.EmailMessage()
 
-        template: src.template.template_email.TemplateEmail
-
-        if language not in self.templates:
-            template = self.templates["default"][identifier]
-        else:
-            template = self.templates[language][identifier]
-
-        if "from" in parameters:
-            parameters["from"].update(
-                self.from_
-            )
-        else:
-            parameters["from"] = self.from_.copy()
-
-        await self.send(
-            message=template.build(
-                parameters
-            )
+        email_message["Subject"] = template[0].render(
+            LANGUAGE=locale,
+            **template_parameters
+        )
+        email_message.add_alternative(
+            template[1].render(
+                LANGUAGE=locale,
+                **template_parameters
+            ),
+            subtype="html"
         )
 
-    async def send_template_account_register_confirm(
-            self,
-            language: str,
-            parameters: dict,
-    ) -> None:
-        await self.send_template(
-            language=language,
-            parameters=parameters,
-            identifier="account-register-confirm"
+        email_message["From"] = ", ".join(
+            [
+                email.utils.formataddr(
+                    (
+                        name,
+                        address
+                    )
+                ) for address, name in self.from_.items()
+            ]
+        )
+
+        if to:
+            email_message["To"] = ", ".join(
+                [
+                    email.utils.formataddr(
+                        (
+                            name,
+                            address
+                        )
+                    ) for address, name in to.items()
+                ]
+            )
+
+        if bcc:
+            email_message["Bcc"] = ", ".join(
+                [
+                    email.utils.formataddr(
+                        (
+                            name,
+                            address
+                        )
+                    ) for address, name in bcc.items()
+                ]
+            )
+
+        await self.send(
+            message=email_message
         )
