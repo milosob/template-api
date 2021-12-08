@@ -171,3 +171,32 @@ class DtoPostAccountPasswordForgetIn(DtoPostAccountPasswordForgetInBase):
 
 class DtoPostAccountPasswordForgetOut(DtoPostAccountPasswordForgetOutBase):
     pass
+
+
+# POST ACCOUNT PASSWORD RECOVER PRIVATE
+
+class DtoPostAccountPasswordRecoverInBase(pydantic.BaseModel):
+    password: str
+
+    @pydantic.validator("password")
+    def validator_password(
+            cls,
+            v: str
+    ) -> str:
+        # TODO
+
+        return v
+
+
+class DtoPostAccountPasswordRecoverOutBase(pydantic.BaseModel):
+    password: str
+
+
+# POST ACCOUNT PASSWORD RECOVER PUBLIC
+
+class DtoPostAccountPasswordRecoverIn(DtoPostAccountPasswordRecoverInBase):
+    pass
+
+
+class DtoPostAccountPasswordRecoverOut(DtoPostAccountPasswordRecoverOutBase):
+    pass

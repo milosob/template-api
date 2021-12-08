@@ -26,11 +26,9 @@ class ServiceJwt:
     lifetime_refresh: int
     lifetime_password_recover: int
 
-    scopes_god: typing.List[str]
-
     verify_access_options: dict
     verify_refresh_options: dict
-    verify_default_options: dict
+    verify_password_recover_options: dict
 
     def __init__(
             self,
@@ -50,7 +48,6 @@ class ServiceJwt:
         self.lifetime_refresh = config["lifetime"]["refresh"]
         self.lifetime_password_recover = config["lifetime"]["password_recover"]
 
-        self.scopes_god = config["scopes_god"]
         self.verify_access_options = {
             "verify_signature": True,
             "verify_aud": False,
@@ -89,7 +86,7 @@ class ServiceJwt:
             "require_jti": False,
             "require_at_hash": True
         }
-        self.verify_default_options = {
+        self.verify_password_recover_options = {
             "verify_signature": True,
             "verify_aud": False,
             "verify_iat": False,
@@ -195,11 +192,6 @@ class ServiceJwt:
         scopes: typing.List[str]
         scopes = payload.get("scopes", [])
 
-        # Check for god mode.
-        for scope in self.scopes_god:
-            if scope in scopes:
-                return
-
         # Check for required scopes.
         for scope in required_scopes:
             if scope not in scopes:
@@ -245,120 +237,3 @@ class ServiceJwt:
             )
 
         return payload
-
-    def issue_access(
-            self,
-            sub: str,
-            data: dict,
-            scopes: typing.List[str]
-    ) -> str:
-        return self.issue(
-            sub=sub,
-            data=data,
-            lifetime=self.lifetime_access,
-            scopes=scopes + [
-                "access_token"
-            ],
-            access_token=None
-        )
-
-    def verify_access(
-            self,
-            access_token: str,
-            access_token_required_scopes: typing.List[str]
-    ) -> dict:
-        return self.verify(
-            token=access_token,
-            required_scopes=access_token_required_scopes + [
-                "access"
-            ],
-            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_exp_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_EXPIRED,
-            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            options=self.verify_access_options
-        )
-
-    def issue_refresh(
-            self,
-            sub: str,
-            data: dict,
-            scopes: typing.List[str],
-            access_token: str
-    ) -> str:
-        return self.issue(
-            sub=sub,
-            data=data,
-            lifetime=self.lifetime_refresh,
-            scopes=scopes + [
-                "refresh_token"
-            ],
-            access_token=access_token
-        )
-
-    def verify_refresh(
-            self,
-            access_token: str,
-            access_token_required_scopes: typing.List[str],
-            refresh_token: str,
-            refresh_token_required_scopes: typing.List[str]
-    ) -> dict:
-
-        self.verify(
-            token=access_token,
-            required_scopes=access_token_required_scopes + [
-                "access"
-            ],
-            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            # Skip expiration verification.
-            verify_exp_error_type=None,
-            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            options=self.verify_access_options
-        )
-
-        return self.verify(
-            token=refresh_token,
-            required_scopes=refresh_token_required_scopes + [
-                "refresh"
-            ],
-            verify_token_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
-            verify_iss_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
-            verify_exp_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_EXPIRED,
-            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_REFRESH_TOKEN_INVALID,
-            options=self.verify_refresh_options,
-            access_token=access_token
-        )
-
-    def issue_password_recover(
-            self,
-            sub: str,
-            data: dict,
-            scopes: typing.List[str]
-    ) -> str:
-        return self.issue(
-            sub=sub,
-            data=data,
-            lifetime=self.lifetime_refresh,
-            scopes=scopes + [
-                "password_recover"
-            ],
-            access_token=None
-        )
-
-    def verify_password_recover(
-            self,
-            password_recover_token: str,
-            password_recover_required_scopes: typing.List[str]
-    ) -> dict:
-        return self.verify(
-            token=password_recover_token,
-            required_scopes=password_recover_required_scopes + [
-                "password_recover"
-            ],
-            verify_token_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_iss_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_exp_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            verify_scopes_error_type=src.error.error_type.AUTHORIZATION_ACCESS_TOKEN_INVALID,
-            options=self.verify_default_options
-        )

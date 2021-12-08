@@ -68,10 +68,7 @@
                     "access": 86400,
                     "refresh": 604800,
                     "password_recover": 600
-                },
-                "scopes_god": [
-                    "root"
-                ]
+                }
             },
             "service_password": {
             }
