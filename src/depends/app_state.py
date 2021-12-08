@@ -5,7 +5,7 @@ import fastapi
 import src.app_state
 
 
-class DependsStateApp:
+class AppState:
 
     def __init__(
             self
@@ -22,5 +22,5 @@ class DependsStateApp:
 def depends(
 ) -> typing.Any:
     return fastapi.Depends(
-        DependsStateApp()
+        AppState()
     )

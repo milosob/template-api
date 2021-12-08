@@ -6,7 +6,7 @@ import src.error.error
 import src.error.error_type
 
 
-class DependsBearerToken:
+class BearerToken:
 
     def __init__(
             self
@@ -39,5 +39,5 @@ class DependsBearerToken:
 
 def depends() -> typing.Any:
     return fastapi.Depends(
-        DependsBearerToken()
+        BearerToken()
     )

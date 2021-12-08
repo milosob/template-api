@@ -12,7 +12,7 @@ import src.database.error.database_error_not_found
 import src.database.account.driver_base
 import src.database.account.model
 import src.depends.bearer_token
-import src.depends.state_app
+import src.depends.app_state
 import src.dto.account
 import src.dto.error
 import src.error.error
@@ -49,7 +49,7 @@ router = fastapi.APIRouter(
 )
 async def post_account_register(
         request: fastapi.Request,
-        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
         account_register_in: src.dto.account.PostAccountRegisterIn = fastapi.Body(
             ...
         )
@@ -62,7 +62,7 @@ async def post_account_register(
 
     try:
         # Verify that email is available.
-        _ = await state_app.database.database_account.find_by_email(
+        _ = await app_state.database.account.find_by_email(
             email=account_register_in.username
         )
 
@@ -86,13 +86,13 @@ async def post_account_register(
     )
 
     # Hash user password.
-    account.authentication.password_reg.primary.password = state_app.service.password.password_hash(
+    account.authentication.password_reg.primary.password = app_state.service.password.password_hash(
         password=account_register_in.password
     )
 
     try:
         # Save account.
-        account = await state_app.database.database_account.insert(
+        account = await app_state.database.account.insert(
             model=account
         )
     except src.database.error.database_error_conflict.DatabaseErrorConflict:
@@ -102,8 +102,8 @@ async def post_account_register(
         )
 
     try:
-        await state_app.service.mail.send_template_account_register_confirm(
-            language=state_app.service.locale.by_request(
+        await app_state.service.mail.send_template_account_register_confirm(
+            language=app_state.service.locale.by_request(
                 request=request
             ),
             parameters={
@@ -154,7 +154,7 @@ async def post_account_register(
 )
 async def post_account_authenticate(
         request: fastapi.Request,
-        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
         post_account_authenticate_in: src.dto.account.PostAccountAuthenticateIn = fastapi.Body(
             ...
         )
@@ -163,7 +163,7 @@ async def post_account_authenticate(
 
     try:
         # Find account.
-        account = await state_app.database.database_account.find_by_email(
+        account = await app_state.database.account.find_by_email(
             email=post_account_authenticate_in.username
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -173,7 +173,7 @@ async def post_account_authenticate(
         )
 
     # Verify password.
-    if not state_app.service.password.password_verify(
+    if not app_state.service.password.password_verify(
             password=post_account_authenticate_in.password,
             password_hash=account.authentication.password_reg.primary.password
     ):
@@ -189,17 +189,17 @@ async def post_account_authenticate(
 
     # Issue new access_token and refresh token.
     access_token: str
-    access_token = state_app.service.jwt.issue(
+    access_token = app_state.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.jwt.lifetime_access,
+        lifetime=app_state.service.jwt.lifetime_access,
         scopes=["type:access"]
     )
     refresh_token: str
-    refresh_token = state_app.service.jwt.issue(
+    refresh_token = app_state.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.jwt.lifetime_refresh,
+        lifetime=app_state.service.jwt.lifetime_refresh,
         scopes=["type:refresh"],
         access_token=access_token
     )
@@ -239,13 +239,13 @@ async def post_account_authenticate(
 )
 async def post_account_authenticate_refresh(
         request: fastapi.Request,
-        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
         post_account_authenticate_refresh_in: src.dto.account.PostAccountAuthenticateRefreshIn = fastapi.Body(
             ...
         )
 ):
     access_token_payload: dict
-    access_token_payload = state_app.service.jwt.verify(
+    access_token_payload = app_state.service.jwt.verify(
         token=post_account_authenticate_refresh_in.access_token,
         required_scopes=["type:access"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
@@ -253,18 +253,18 @@ async def post_account_authenticate_refresh(
         # Skip expiration verification.
         verify_exp_error_type=None,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_SCOPES,
-        options=state_app.service.jwt.verify_access_options
+        options=app_state.service.jwt.verify_access_options
     )
 
     refresh_token_payload: dict
-    refresh_token_payload = state_app.service.jwt.verify(
+    refresh_token_payload = app_state.service.jwt.verify(
         token=post_account_authenticate_refresh_in.refresh_token,
         required_scopes=["type:refresh"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_SCOPES,
-        options=state_app.service.jwt.verify_refresh_options,
+        options=app_state.service.jwt.verify_refresh_options,
         access_token=post_account_authenticate_refresh_in.access_token
     )
 
@@ -278,17 +278,17 @@ async def post_account_authenticate_refresh(
 
     # Issue new access_token and refresh token.
     access_token: str
-    access_token = state_app.service.jwt.issue(
+    access_token = app_state.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.jwt.lifetime_access,
+        lifetime=app_state.service.jwt.lifetime_access,
         scopes=access_token_payload["scopes"]
     )
     refresh_token: str
-    refresh_token = state_app.service.jwt.issue(
+    refresh_token = app_state.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.jwt.lifetime_refresh,
+        lifetime=app_state.service.jwt.lifetime_refresh,
         scopes=["type:refresh"],
         access_token=access_token
     )
@@ -328,7 +328,7 @@ async def post_account_authenticate_refresh(
 )
 async def post_account_password_forget(
         request: fastapi.Request,
-        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
         post_account_password_forget_in: src.dto.account.PostAccountPasswordForgetIn = fastapi.Body(
             ...
         )
@@ -337,7 +337,7 @@ async def post_account_password_forget(
 
     try:
         # Find account.
-        account = await state_app.database.database_account.find_by_email(
+        account = await app_state.database.account.find_by_email(
             email=post_account_password_forget_in.username
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -371,10 +371,10 @@ async def post_account_password_forget(
 
     # Issue JWT password recover token.
     password_recover_token: str
-    password_recover_token = state_app.service.jwt.issue(
+    password_recover_token = app_state.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.jwt.lifetime_password_recover,
+        lifetime=app_state.service.jwt.lifetime_password_recover,
         scopes=["type:password_recover"]
     )
 
@@ -419,21 +419,21 @@ async def post_account_password_forget(
 )
 async def post_account_password_recover(
         request: fastapi.Request,
-        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
         password_recover_token: str = src.depends.bearer_token.depends(),
         post_account_password_recover_in: src.dto.account.PostAccountPasswordRecoverIn = fastapi.Body(
             ...
         )
 ):
     payload: dict
-    payload = state_app.service.jwt.verify(
+    payload = app_state.service.jwt.verify(
         token=password_recover_token,
         required_scopes=["type:password_recover"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
-        options=state_app.service.jwt.verify_password_recover_options,
+        options=app_state.service.jwt.verify_password_recover_options,
     )
 
     data: dict
@@ -463,7 +463,7 @@ async def post_account_password_recover(
 
     try:
         # Find account.
-        account = await state_app.database.database_account.find_by_identifier(
+        account = await app_state.database.account.find_by_identifier(
             identifier=identifier
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -493,7 +493,7 @@ async def post_account_password_recover(
     new_password_hash: str
 
     while True:
-        new_password_hash = state_app.service.password.password_hash(
+        new_password_hash = app_state.service.password.password_hash(
             post_account_password_recover_in.password
         )
 
@@ -505,7 +505,7 @@ async def post_account_password_recover(
 
     try:
         # Update account.
-        account = await state_app.database.database_account.update(
+        account = await app_state.database.account.update(
             account
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
