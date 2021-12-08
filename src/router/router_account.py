@@ -138,7 +138,7 @@ async def post_account_register(
 
     try:
         await state_app.service.service_email.send_template_account_register_confirm(
-            language=state_app.service.service_lang.by_request(
+            language=state_app.service.service_locale.by_request(
                 request=request
             ),
             parameters={

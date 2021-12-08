@@ -48,8 +48,12 @@
                     "contact@test.test": "Contact Test App"
                 }
             },
-            "service_lang": {
-                "default": "en"
+            "service_locale": {
+                "default": "en",
+                "supported": [
+                    "en",
+                    "pl"
+                ]
             },
             "service_jwt": {
                 "issue_id": "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c",
