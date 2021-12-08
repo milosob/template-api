@@ -27,9 +27,8 @@ class ServiceJwt:
     lifetime_password_recover: int
     lifetime_account_register: int
 
-    verify_access_options: dict
+    verify_default_options: dict
     verify_refresh_options: dict
-    verify_password_recover_options: dict
 
     def __init__(
             self,
@@ -50,7 +49,7 @@ class ServiceJwt:
         self.lifetime_password_recover = config["lifetime"]["password_recover"]
         self.lifetime_account_register = config["lifetime"]["account_register"]
 
-        self.verify_access_options = {
+        self.verify_default_options = {
             "verify_signature": True,
             "verify_aud": False,
             "verify_iat": False,
@@ -69,44 +68,9 @@ class ServiceJwt:
             "require_jti": False,
             "require_at_hash": False
         }
-        self.verify_refresh_options = {
-            "verify_signature": True,
-            "verify_aud": False,
-            "verify_iat": False,
-            "verify_exp": False,
-            "verify_nbf": False,
-            "verify_iss": False,
-            "verify_sub": False,
-            "verify_jti": False,
-            "verify_at_hash": True,
-            "require_aud": False,
-            "require_iat": True,
-            "require_exp": True,
-            "require_nbf": False,
-            "require_iss": True,
-            "require_sub": True,
-            "require_jti": False,
-            "require_at_hash": True
-        }
-        self.verify_password_recover_options = {
-            "verify_signature": True,
-            "verify_aud": False,
-            "verify_iat": False,
-            "verify_exp": False,
-            "verify_nbf": False,
-            "verify_iss": False,
-            "verify_sub": False,
-            "verify_jti": False,
-            "verify_at_hash": False,
-            "require_aud": False,
-            "require_iat": True,
-            "require_exp": True,
-            "require_nbf": False,
-            "require_iss": True,
-            "require_sub": True,
-            "require_jti": False,
-            "require_at_hash": False
-        }
+        self.verify_refresh_options = self.verify_default_options
+        self.verify_refresh_options["verify_at_hash"] = True
+        self.verify_refresh_options["require_at_hash"] = True
 
     def issue(
             self,

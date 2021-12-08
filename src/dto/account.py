@@ -48,6 +48,26 @@ class AccountPostRegisterOut(AccountPostRegisterOutBase):
     pass
 
 
+# POST ACCOUNT REGISTER CONFIRM PRIVATE
+
+class AccountPostRegisterConfirmInBase(pydantic.BaseModel):
+    pass
+
+
+class AccountPostRegisterConfirmOutBase(pydantic.BaseModel):
+    pass
+
+
+# POST ACCOUNT REGISTER CONFIRM PUBLIC
+
+class AccountPostRegisterConfirmIn(AccountPostRegisterConfirmInBase):
+    pass
+
+
+class AccountPostRegisterConfirmOut(AccountPostRegisterConfirmOutBase):
+    pass
+
+
 # POST ACCOUNT AUTHENTICATE PRIVATE
 
 class AccountPostAuthenticateInBase(pydantic.BaseModel):

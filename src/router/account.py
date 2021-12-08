@@ -123,7 +123,6 @@ async def account_post_register(
             token=account_register_token
         )
     except Exception as e:
-        print(e)
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER
@@ -133,6 +132,56 @@ async def account_post_register(
         username=account_register_in.username,
         password=None
     )
+
+
+@router.post(
+    path="/register/confirm",
+    summary="Account register.",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    responses={
+        fastapi.status.HTTP_201_CREATED: {
+            "model": src.dto.account.AccountPostRegisterOut,
+            "description": "Resource created."
+        },
+        fastapi.status.HTTP_400_BAD_REQUEST: {
+            "model": src.dto.error.ErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "model": src.dto.error.ErrorApiOut,
+            "description": "Error."
+        },
+        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+            "model": src.dto.error.ErrorApiOut,
+            "description": "Error."
+        }
+    }
+)
+async def account_post_register_confirm(
+        request: fastapi.Request,
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
+        account_register_confirm_token: str = src.depends.bearer_token.depends(),
+        account_register_confirm_in: src.dto.account.AccountPostRegisterConfirmIn = fastapi.Body(
+            ...
+        )
+):
+    payload: dict
+    payload = app_state.service.jwt.verify(
+        token=account_register_confirm_token,
+        required_scopes=["type:account-register-confirm"],
+        verify_token_error_type=src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
+        verify_iss_error_type=src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
+        verify_exp_error_type=src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
+        verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES,
+        options=app_state.service.jwt.verify_default_options,
+    )
+
+    sub: str
+    sub = payload["sub"]
+
+    # TODO
+
+    return src.dto.account.AccountPostRegisterConfirmOut()
 
 
 @router.post(
@@ -259,7 +308,7 @@ async def account_post_authenticate_refresh(
         # Skip expiration verification.
         verify_exp_error_type=None,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_SCOPES,
-        options=app_state.service.jwt.verify_access_options
+        options=app_state.service.jwt.verify_default_options
     )
 
     refresh_token_payload: dict
@@ -439,7 +488,7 @@ async def account_post_password_recover(
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
-        options=app_state.service.jwt.verify_password_recover_options,
+        options=app_state.service.jwt.verify_default_options,
     )
 
     data: dict
@@ -462,15 +511,15 @@ async def account_post_password_recover(
     signature_bytes: bytes
     signature_bytes = bytes.fromhex(signature_str)
 
-    identifier: str
-    identifier = payload["sub"]
+    sub: str
+    sub = payload["sub"]
 
     account: src.database.account.model.Account
 
     try:
         # Find account.
         account = await app_state.database.account.find_by_identifier(
-            identifier=identifier
+            identifier=sub
         )
     except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(

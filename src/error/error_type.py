@@ -10,6 +10,11 @@ SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET = "service-unavailable-email-a
 UNAUTHORIZED_HEADER_MISSING = "unauthorized-header-missing"
 UNAUTHORIZED_HEADER_SCHEME = "unauthorized-header-scheme"
 
+UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID = "unauthorized-account-register-confirm-token-invalid"
+UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER = "unauthorized-account-register-confirm-token-issuer"
+UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED = "unauthorized-account-register-confirm-token-expired"
+UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES = "unauthorized-account-register-confirm-token-scopes"
+
 UNAUTHORIZED_ACCESS_TOKEN_INVALID = "unauthorized-access-token-invalid"
 UNAUTHORIZED_ACCESS_TOKEN_ISSUER = "unauthorized-access-token-issuer"
 UNAUTHORIZED_ACCESS_TOKEN_EXPIRED = "unauthorized-access-token-expired"
