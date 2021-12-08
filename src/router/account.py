@@ -140,7 +140,7 @@ async def account_post_register(
     status_code=fastapi.status.HTTP_201_CREATED,
     responses={
         fastapi.status.HTTP_201_CREATED: {
-            "model": src.dto.account.AccountPostRegisterOut,
+            "model": src.dto.account.AccountPostRegisterConfirmOut,
             "description": "Resource created."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
