@@ -7,6 +7,9 @@ SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER = "service-unavailable-email-account-
 SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET = "service-unavailable-email-account-password-forget"
 
 # UNAUTHORIZED
+UNAUTHORIZED_HEADER_MISSING = "unauthorized-header-missing"
+UNAUTHORIZED_HEADER_SCHEME = "unauthorized-header-scheme"
+
 UNAUTHORIZED_ACCESS_TOKEN_INVALID = "unauthorized-access-token-invalid"
 UNAUTHORIZED_ACCESS_TOKEN_ISSUER = "unauthorized-access-token-issuer"
 UNAUTHORIZED_ACCESS_TOKEN_EXPIRED = "unauthorized-access-token-expired"

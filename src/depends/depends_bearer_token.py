@@ -23,8 +23,7 @@ class DependsBearerToken:
         if not authorization:
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                # TODO
-                type=""
+                type=src.error.error_type.UNAUTHORIZED_HEADER_MISSING
             )
 
         scheme, _, parameter = authorization.partition(" ")
@@ -32,8 +31,7 @@ class DependsBearerToken:
         if scheme.lower() != "bearer":
             raise src.error.error.Error(
                 code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                # TODO
-                type=""
+                type=src.error.error_type.UNAUTHORIZED_HEADER_SCHEME
             )
 
         return parameter
