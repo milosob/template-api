@@ -1,21 +1,21 @@
-import app_database
-import app_service
+import src.app_database
+import src.app_service
 
 
 class AppState:
     config: dict
 
-    database: app_database.AppDatabase
-    service: app_service.AppService
+    database: src.app_database.AppDatabase
+    service: src.app_service.AppService
 
     def __init__(
             self,
             config: dict
     ):
         self.config = config
-        self.database = app_database.AppDatabase(
+        self.database = src.app_database.AppDatabase(
             config=config["database"]
         )
-        self.service = app_service.AppService(
+        self.service = src.app_service.AppService(
             config=config["service"]
         )
