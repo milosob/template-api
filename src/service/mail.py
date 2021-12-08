@@ -7,7 +7,7 @@ import src.template.template_email
 import src.template.template_email_account_register_confirm_pl
 
 
-class ServiceEmail:
+class ServiceMail:
     config: dict
     from_: dict
 

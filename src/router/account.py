@@ -6,20 +6,17 @@ import os
 import fastapi
 import fastapi.security
 
+import src.app_state
 import src.database.error.database_error_conflict
 import src.database.error.database_error_not_found
-import src.database.account.database_account_driver_base
-import src.database.account.database_account_model
-import src.database.confirm.database_confirm_driver_base
-import src.database.confirm.database_confirm_model
-import src.depends.depends_bearer_token
-import src.depends.depends_state_app
+import src.database.account.driver_base
+import src.database.account.model
+import src.depends.bearer_token
+import src.depends.state_app
+import src.dto.account
+import src.dto.error
 import src.error.error
 import src.error.error_type
-import src.dto.dto_account
-import src.dto.dto_error
-import src.state.state_app
-import src.state.state_request
 
 router = fastapi.APIRouter(
     prefix="/account",
@@ -33,38 +30,32 @@ router = fastapi.APIRouter(
     status_code=fastapi.status.HTTP_201_CREATED,
     responses={
         fastapi.status.HTTP_201_CREATED: {
-            "model": src.dto.dto_account.DtoPostAccountRegisterOut,
+            "model": src.dto.account.PostAccountRegisterOut,
             "description": "Resource created."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         }
     }
 )
 async def post_account_register(
         request: fastapi.Request,
-        state_app: src.state.state_app.StateApp = src.depends.depends_state_app.depends(),
-        account_register_in: src.dto.dto_account.DtoPostAccountRegisterIn = fastapi.Body(
+        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        account_register_in: src.dto.account.PostAccountRegisterIn = fastapi.Body(
             ...
         )
 ):
-    db_account_model: src.database.account.database_account_model.DatabaseAccountModel
-    db_account_model = src.database.account.database_account_model.DatabaseAccountModel()
-
-    db_confirm_model: src.database.confirm.database_confirm_model.DatabaseConfirmModel
-    db_confirm_model = src.database.confirm.database_confirm_model.DatabaseConfirmModel()
-
-    db_confirm_model_context: src.database.confirm.database_confirm_model.DatabaseConfirmEmailModel
-    db_confirm_model_context = src.database.confirm.database_confirm_model.DatabaseConfirmEmailModel()
+    account: src.database.account.model.Account
+    account = src.database.account.model.Account()
 
     date_now: datetime.datetime
     date_now = datetime.datetime.utcnow()
@@ -84,25 +75,25 @@ async def post_account_register(
         pass
 
     # Assign email.
-    db_account_model.email.reg.primary.email = account_register_in.username
+    account.email.reg.primary.email = account_register_in.username
     # Mark email as primary.
-    db_account_model.email.reg.primary.primary = True
+    account.email.reg.primary.primary = True
     # Mark account to require authentication.
-    db_account_model.email.reg.primary.confirmed_at = None
+    account.email.reg.primary.confirmed_at = None
     # Append email record to registry.
-    db_account_model.email.reg.records.append(
-        db_account_model.email.reg.primary
+    account.email.reg.records.append(
+        account.email.reg.primary
     )
 
     # Hash user password.
-    db_account_model.authentication.password_reg.primary.password = state_app.service.service_password.password_hash(
+    account.authentication.password_reg.primary.password = state_app.service.password.password_hash(
         password=account_register_in.password
     )
 
     try:
         # Save account.
-        db_account_model = await state_app.database.database_account.insert(
-            model=db_account_model
+        account = await state_app.database.database_account.insert(
+            model=account
         )
     except src.database.error.database_error_conflict.DatabaseErrorConflict:
         raise src.error.error.Error(
@@ -110,44 +101,19 @@ async def post_account_register(
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
         )
 
-    # Configure confirm model.
-    db_confirm_model.token = os.urandom(32).hex()
-    db_confirm_model.issued_at = date_now
-    db_confirm_model.expires_at = date_now + datetime.timedelta(
-        minutes=15
-    )
-    db_confirm_model.confirmed_at = None
-    db_confirm_model.type = "account-confirm-email"
-
-    # Configure confirm model context.
-    db_confirm_model_context.email = account_register_in.username
-
-    # Assign context to confirm model.
-    db_confirm_model.context = db_confirm_model_context
-
     try:
-        # Save account confirm.
-        db_confirm_model = await state_app.database.database_confirm.insert(
-            model=db_confirm_model
-        )
-    except src.database.error.database_error_conflict.DatabaseErrorConflict:
-        raise src.error.error.Error(
-            code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
-            type=src.error.error_type.INTERNAL_SERVER_ERROR
-        )
-
-    try:
-        await state_app.service.service_email.send_template_account_register_confirm(
-            language=state_app.service.service_locale.by_request(
+        await state_app.service.mail.send_template_account_register_confirm(
+            language=state_app.service.locale.by_request(
                 request=request
             ),
             parameters={
                 "to": {
-                    db_account_model.email.reg.primary.email: None
+                    account.email.reg.primary.email: None
                 },
                 "subject": {},
                 "body": {
-                    "token": db_confirm_model.token
+                    # TODO
+                    "token": "tokne"
                 }
             }
         )
@@ -157,7 +123,7 @@ async def post_account_register(
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER
         )
 
-    return src.dto.dto_account.DtoPostAccountRegisterOut(
+    return src.dto.account.PostAccountRegisterOut(
         username=account_register_in.username,
         password=None
     )
@@ -169,35 +135,35 @@ async def post_account_register(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.dto_account.DtoPostAccountAuthenticateOut,
+            "model": src.dto.account.PostAccountAuthenticateOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         }
     }
 )
 async def post_account_authenticate(
         request: fastapi.Request,
-        state_app: src.state.state_app.StateApp = src.depends.depends_state_app.depends(),
-        post_account_authenticate_in: src.dto.dto_account.DtoPostAccountAuthenticateIn = fastapi.Body(
+        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        post_account_authenticate_in: src.dto.account.PostAccountAuthenticateIn = fastapi.Body(
             ...
         )
 ):
-    db_account_model: src.database.account.database_account_model.DatabaseAccountModel
+    account: src.database.account.model.Account
 
     try:
         # Find account.
-        db_account_model = await state_app.database.database_account.find_by_email(
+        account = await state_app.database.database_account.find_by_email(
             email=post_account_authenticate_in.username
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -207,9 +173,9 @@ async def post_account_authenticate(
         )
 
     # Verify password.
-    if not state_app.service.service_password.password_verify(
+    if not state_app.service.password.password_verify(
             password=post_account_authenticate_in.password,
-            password_hash=db_account_model.authentication.password_reg.primary.password
+            password_hash=account.authentication.password_reg.primary.password
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
@@ -217,28 +183,28 @@ async def post_account_authenticate(
         )
 
     sub: str
-    sub = db_account_model.identifier
+    sub = account.identifier
     data: dict
     data = {}
 
     # Issue new access_token and refresh token.
     access_token: str
-    access_token = state_app.service.service_jwt.issue(
+    access_token = state_app.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.service_jwt.lifetime_access,
+        lifetime=state_app.service.jwt.lifetime_access,
         scopes=["type:access"]
     )
     refresh_token: str
-    refresh_token = state_app.service.service_jwt.issue(
+    refresh_token = state_app.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.service_jwt.lifetime_refresh,
+        lifetime=state_app.service.jwt.lifetime_refresh,
         scopes=["type:refresh"],
         access_token=access_token
     )
 
-    return src.dto.dto_account.DtoPostAccountAuthenticateOut(
+    return src.dto.account.PostAccountAuthenticateOut(
         access_token=access_token,
         refresh_token=refresh_token
     )
@@ -250,36 +216,36 @@ async def post_account_authenticate(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.dto_account.DtoPostAccountAuthenticateRefreshOut,
+            "model": src.dto.account.PostAccountAuthenticateRefreshOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         }
     }
 )
 async def post_account_authenticate_refresh(
         request: fastapi.Request,
-        state_app: src.state.state_app.StateApp = src.depends.depends_state_app.depends(),
-        post_account_authenticate_refresh_in: src.dto.dto_account.DtoPostAccountAuthenticateRefreshIn = fastapi.Body(
+        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        post_account_authenticate_refresh_in: src.dto.account.PostAccountAuthenticateRefreshIn = fastapi.Body(
             ...
         )
 ):
     access_token_payload: dict
-    access_token_payload = state_app.service.service_jwt.verify(
+    access_token_payload = state_app.service.jwt.verify(
         token=post_account_authenticate_refresh_in.access_token,
         required_scopes=["type:access"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
@@ -287,18 +253,18 @@ async def post_account_authenticate_refresh(
         # Skip expiration verification.
         verify_exp_error_type=None,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_SCOPES,
-        options=state_app.service.service_jwt.verify_access_options
+        options=state_app.service.jwt.verify_access_options
     )
 
     refresh_token_payload: dict
-    refresh_token_payload = state_app.service.service_jwt.verify(
+    refresh_token_payload = state_app.service.jwt.verify(
         token=post_account_authenticate_refresh_in.refresh_token,
         required_scopes=["type:refresh"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_SCOPES,
-        options=state_app.service.service_jwt.verify_refresh_options,
+        options=state_app.service.jwt.verify_refresh_options,
         access_token=post_account_authenticate_refresh_in.access_token
     )
 
@@ -312,22 +278,22 @@ async def post_account_authenticate_refresh(
 
     # Issue new access_token and refresh token.
     access_token: str
-    access_token = state_app.service.service_jwt.issue(
+    access_token = state_app.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.service_jwt.lifetime_access,
+        lifetime=state_app.service.jwt.lifetime_access,
         scopes=access_token_payload["scopes"]
     )
     refresh_token: str
-    refresh_token = state_app.service.service_jwt.issue(
+    refresh_token = state_app.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.service_jwt.lifetime_refresh,
+        lifetime=state_app.service.jwt.lifetime_refresh,
         scopes=["type:refresh"],
         access_token=access_token
     )
 
-    return src.dto.dto_account.DtoPostAccountAuthenticateRefreshOut(
+    return src.dto.account.PostAccountAuthenticateRefreshOut(
         access_token=access_token,
         refresh_token=refresh_token
     )
@@ -339,39 +305,39 @@ async def post_account_authenticate_refresh(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.dto_account.DtoPostAccountPasswordForgetOut,
+            "model": src.dto.account.PostAccountPasswordForgetOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         }
     }
 )
 async def post_account_password_forget(
         request: fastapi.Request,
-        state_app: src.state.state_app.StateApp = src.depends.depends_state_app.depends(),
-        post_account_password_forget_in: src.dto.dto_account.DtoPostAccountPasswordForgetIn = fastapi.Body(
+        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        post_account_password_forget_in: src.dto.account.PostAccountPasswordForgetIn = fastapi.Body(
             ...
         )
 ):
-    db_account_model: src.database.account.database_account_model.DatabaseAccountModel
+    account: src.database.account.model.Account
 
     try:
         # Find account.
-        db_account_model = await state_app.database.database_account.find_by_email(
+        account = await state_app.database.database_account.find_by_email(
             email=post_account_password_forget_in.username
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -379,7 +345,7 @@ async def post_account_password_forget(
         await asyncio.sleep(
             delay=1
         )
-        return src.dto.dto_account.DtoPostAccountPasswordForgetOut()
+        return src.dto.account.PostAccountPasswordForgetOut()
 
     # Build recover context to auto revoke token if password was changed.
     # It's possible to request many recovery links, however as soon password will be changed mac verification will fail.
@@ -387,13 +353,13 @@ async def post_account_password_forget(
     nonce_bytes = os.urandom(16)
     signature_bytes: bytes
     signature_bytes = hmac.digest(
-        key=db_account_model.authentication.password_reg.primary.password.encode("utf-8"),
+        key=account.authentication.password_reg.primary.password.encode("utf-8"),
         msg=nonce_bytes,
         digest="sha256"
     )
 
     sub: str
-    sub = db_account_model.identifier
+    sub = account.identifier
     data: dict
     data = {
         "nonce": nonce_bytes.hex(),
@@ -405,10 +371,10 @@ async def post_account_password_forget(
 
     # Issue JWT password recover token.
     password_recover_token: str
-    password_recover_token = state_app.service.service_jwt.issue(
+    password_recover_token = state_app.service.jwt.issue(
         sub=sub,
         data=data,
-        lifetime=state_app.service.service_jwt.lifetime_password_recover,
+        lifetime=state_app.service.jwt.lifetime_password_recover,
         scopes=["type:password_recover"]
     )
 
@@ -421,7 +387,7 @@ async def post_account_password_forget(
             type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET
         )
 
-    return src.dto.dto_account.DtoPostAccountPasswordForgetOut()
+    return src.dto.account.PostAccountPasswordForgetOut()
 
 
 @router.post(
@@ -430,44 +396,44 @@ async def post_account_password_forget(
     status_code=fastapi.status.HTTP_200_OK,
     responses={
         fastapi.status.HTTP_200_OK: {
-            "model": src.dto.dto_account.DtoPostAccountPasswordRecoverOut,
+            "model": src.dto.account.PostAccountPasswordRecoverOut,
             "description": "Operation successful."
         },
         fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         },
         fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.dto_error.DtoErrorApiOut,
+            "model": src.dto.error.ErrorApiOut,
             "description": "Error."
         }
     }
 )
 async def post_account_password_recover(
         request: fastapi.Request,
-        state_app: src.state.state_app.StateApp = src.depends.depends_state_app.depends(),
-        password_recover_token: str = src.depends.depends_bearer_token.depends(),
-        post_account_password_recover_in: src.dto.dto_account.DtoPostAccountPasswordRecoverIn = fastapi.Body(
+        state_app: src.app_state.AppState = src.depends.state_app.depends(),
+        password_recover_token: str = src.depends.bearer_token.depends(),
+        post_account_password_recover_in: src.dto.account.PostAccountPasswordRecoverIn = fastapi.Body(
             ...
         )
 ):
     payload: dict
-    payload = state_app.service.service_jwt.verify(
+    payload = state_app.service.jwt.verify(
         token=password_recover_token,
         required_scopes=["type:password_recover"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
         verify_exp_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
-        options=state_app.service.service_jwt.verify_password_recover_options,
+        options=state_app.service.jwt.verify_password_recover_options,
     )
 
     data: dict
@@ -493,11 +459,11 @@ async def post_account_password_recover(
     identifier: str
     identifier = payload["sub"]
 
-    db_account_model: src.database.account.database_account_model.DatabaseAccountModel
+    account: src.database.account.model.Account
 
     try:
         # Find account.
-        db_account_model = await state_app.database.database_account.find_by_identifier(
+        account = await state_app.database.database_account.find_by_identifier(
             identifier=identifier
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
@@ -507,13 +473,13 @@ async def post_account_password_recover(
         )
 
     old_password_hash: str
-    old_password_hash = db_account_model.authentication.password_reg.primary.password
+    old_password_hash = account.authentication.password_reg.primary.password
 
     # Verify that symmetric signature is correct.
     if not hmac.compare_digest(
             signature_bytes,
             hmac.digest(
-                key=db_account_model.authentication.password_reg.primary.password.encode("utf-8"),
+                key=account.authentication.password_reg.primary.password.encode("utf-8"),
                 msg=nonce_bytes,
                 digest="sha256"
             )
@@ -527,7 +493,7 @@ async def post_account_password_recover(
     new_password_hash: str
 
     while True:
-        new_password_hash = state_app.service.service_password.password_hash(
+        new_password_hash = state_app.service.password.password_hash(
             post_account_password_recover_in.password
         )
 
@@ -535,12 +501,12 @@ async def post_account_password_recover(
         if not hmac.compare_digest(old_password_hash, new_password_hash):
             break
 
-    db_account_model.authentication.password_reg.primary.password = new_password_hash
+    account.authentication.password_reg.primary.password = new_password_hash
 
     try:
         # Update account.
-        db_account_model = await state_app.database.database_account.update(
-            db_account_model
+        account = await state_app.database.database_account.update(
+            account
         )
     except src.database.error.database_error_not_found.DatabaseErrorNotFound:
         raise src.error.error.Error(
@@ -549,4 +515,4 @@ async def post_account_password_recover(
         )
 
     # Password successfully changed.
-    return src.dto.dto_account.DtoPostAccountPasswordRecoverOut()
+    return src.dto.account.PostAccountPasswordRecoverOut()

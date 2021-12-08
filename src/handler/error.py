@@ -3,7 +3,7 @@ import datetime
 import fastapi
 import fastapi.responses
 
-import src.dto.dto_error
+import src.dto.error
 import src.error.error
 
 error_type = src.error.error.Error
@@ -16,7 +16,7 @@ async def handler(
     return fastapi.responses.Response(
         status_code=exc.code,
         media_type="application/json",
-        content=src.dto.dto_error.DtoErrorApiOut(
+        content=src.dto.error.ErrorApiOut(
             code=exc.code,
             type=exc.type,
             occurred_at=datetime.datetime.utcnow()

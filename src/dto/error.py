@@ -4,11 +4,11 @@ import fastapi
 import pydantic
 
 
-class DtoErrorApiOutBase(pydantic.BaseModel):
+class ErrorApiOutBase(pydantic.BaseModel):
     code: int
     type: str
     occurred_at: datetime.datetime
 
 
-class DtoErrorApiOut(DtoErrorApiOutBase):
+class ErrorApiOut(ErrorApiOutBase):
     pass

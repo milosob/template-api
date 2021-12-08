@@ -24,19 +24,14 @@
     },
     "state": {
         "database": {
-            "database_account": {
-                "driver": "memory",
-                "memory": {
-                }
-            },
-            "database_confirm": {
+            "account": {
                 "driver": "memory",
                 "memory": {
                 }
             }
         },
         "service": {
-            "service_email": {
+            "mail": {
                 "driver": "smtp",
                 "smtp": {
                     "host": "0.0.0.0",
@@ -48,14 +43,14 @@
                     "contact@test.test": "Contact Test App"
                 }
             },
-            "service_locale": {
+            "locale": {
                 "default": "en",
                 "supported": [
                     "en",
                     "pl"
                 ]
             },
-            "service_jwt": {
+            "jwt": {
                 "issue_id": "87eccfc048f4e1f8edaaae326626790a5c72662e75881575247540fe36f59c7c",
                 "issue_key": "8e2966227d44debf33cd97465f9d796b75dac8f4293f9c2831ca51251257fda3",
                 "issue_alg": "HS256",
@@ -74,8 +69,7 @@
                     "password_recover": 600
                 }
             },
-            "service_password": {
-            }
+            "password": {}
         }
     }
 }

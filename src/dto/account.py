@@ -6,7 +6,7 @@ import pydantic
 
 # POST ACCOUNT REGISTER PRIVATE
 
-class DtoPostAccountRegisterInBase(pydantic.BaseModel):
+class PostAccountRegisterInBase(pydantic.BaseModel):
     username: str = fastapi.Body(
         ...
     )
@@ -33,24 +33,24 @@ class DtoPostAccountRegisterInBase(pydantic.BaseModel):
         return v
 
 
-class DtoPostAccountRegisterOutBase(pydantic.BaseModel):
+class PostAccountRegisterOutBase(pydantic.BaseModel):
     username: str
     password: typing.Optional[str]
 
 
 # POST ACCOUNT REGISTER PUBLIC
 
-class DtoPostAccountRegisterIn(DtoPostAccountRegisterInBase):
+class PostAccountRegisterIn(PostAccountRegisterInBase):
     pass
 
 
-class DtoPostAccountRegisterOut(DtoPostAccountRegisterOutBase):
+class PostAccountRegisterOut(PostAccountRegisterOutBase):
     pass
 
 
 # POST ACCOUNT AUTHENTICATE PRIVATE
 
-class DtoPostAccountAuthenticateInBase(pydantic.BaseModel):
+class PostAccountAuthenticateInBase(pydantic.BaseModel):
     username: str = fastapi.Body(
         ...
     )
@@ -89,24 +89,24 @@ class DtoPostAccountAuthenticateInBase(pydantic.BaseModel):
         return v
 
 
-class DtoPostAccountAuthenticateOutBase(pydantic.BaseModel):
+class PostAccountAuthenticateOutBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
 
 
 # POST ACCOUNT AUTHENTICATE PUBLIC
 
-class DtoPostAccountAuthenticateIn(DtoPostAccountAuthenticateInBase):
+class PostAccountAuthenticateIn(PostAccountAuthenticateInBase):
     pass
 
 
-class DtoPostAccountAuthenticateOut(DtoPostAccountAuthenticateOutBase):
+class PostAccountAuthenticateOut(PostAccountAuthenticateOutBase):
     pass
 
 
 # POST ACCOUNT AUTHENTICATE REFRESH PRIVATE
 
-class DtoPostAccountAuthenticateRefreshInBase(pydantic.BaseModel):
+class PostAccountAuthenticateRefreshInBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
 
@@ -129,24 +129,24 @@ class DtoPostAccountAuthenticateRefreshInBase(pydantic.BaseModel):
         return v
 
 
-class DtoPostAccountAuthenticateRefreshOutBase(pydantic.BaseModel):
+class PostAccountAuthenticateRefreshOutBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
 
 
 # POST ACCOUNT AUTHENTICATE REFRESH PUBLIC
 
-class DtoPostAccountAuthenticateRefreshIn(DtoPostAccountAuthenticateRefreshInBase):
+class PostAccountAuthenticateRefreshIn(PostAccountAuthenticateRefreshInBase):
     pass
 
 
-class DtoPostAccountAuthenticateRefreshOut(DtoPostAccountAuthenticateRefreshOutBase):
+class PostAccountAuthenticateRefreshOut(PostAccountAuthenticateRefreshOutBase):
     pass
 
 
 # POST ACCOUNT PASSWORD FORGET PRIVATE
 
-class DtoPostAccountPasswordForgetInBase(pydantic.BaseModel):
+class PostAccountPasswordForgetInBase(pydantic.BaseModel):
     username: str
 
     @pydantic.validator("username")
@@ -159,23 +159,23 @@ class DtoPostAccountPasswordForgetInBase(pydantic.BaseModel):
         return v
 
 
-class DtoPostAccountPasswordForgetOutBase(pydantic.BaseModel):
+class PostAccountPasswordForgetOutBase(pydantic.BaseModel):
     pass
 
 
 # POST ACCOUNT PASSWORD FORGET PUBLIC
 
-class DtoPostAccountPasswordForgetIn(DtoPostAccountPasswordForgetInBase):
+class PostAccountPasswordForgetIn(PostAccountPasswordForgetInBase):
     pass
 
 
-class DtoPostAccountPasswordForgetOut(DtoPostAccountPasswordForgetOutBase):
+class PostAccountPasswordForgetOut(PostAccountPasswordForgetOutBase):
     pass
 
 
 # POST ACCOUNT PASSWORD RECOVER PRIVATE
 
-class DtoPostAccountPasswordRecoverInBase(pydantic.BaseModel):
+class PostAccountPasswordRecoverInBase(pydantic.BaseModel):
     password: str
 
     @pydantic.validator("password")
@@ -188,15 +188,15 @@ class DtoPostAccountPasswordRecoverInBase(pydantic.BaseModel):
         return v
 
 
-class DtoPostAccountPasswordRecoverOutBase(pydantic.BaseModel):
+class PostAccountPasswordRecoverOutBase(pydantic.BaseModel):
     password: str
 
 
 # POST ACCOUNT PASSWORD RECOVER PUBLIC
 
-class DtoPostAccountPasswordRecoverIn(DtoPostAccountPasswordRecoverInBase):
+class PostAccountPasswordRecoverIn(PostAccountPasswordRecoverInBase):
     pass
 
 
-class DtoPostAccountPasswordRecoverOut(DtoPostAccountPasswordRecoverOutBase):
+class PostAccountPasswordRecoverOut(PostAccountPasswordRecoverOutBase):
     pass

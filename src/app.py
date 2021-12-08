@@ -7,10 +7,9 @@ import fastapi.middleware.cors
 import hypercorn.config
 import hypercorn.asyncio
 
-import src.handler.handler_error
-import src.router.router_account
-import src.router.router_confirm
-import src.state.state_app
+import src.app_state
+import src.handler.error
+import src.router.account
 
 
 def run(
@@ -53,7 +52,7 @@ def run(
     # app exception handlers
     app_exception_handlers: dict
     app_exception_handlers = {
-        src.handler.handler_error.error_type: src.handler.handler_error.handler
+        src.handler.error.error_type: src.handler.error.handler
     }
 
     # app build
@@ -64,15 +63,11 @@ def run(
 
     # app routers
     app.include_router(
-        router=src.router.router_account.router
-    )
-
-    app.include_router(
-        router=src.router.router_confirm.router
+        router=src.router.account.router
     )
 
     # app state
-    app.state = src.state.state_app.StateApp(
+    app.state = src.app_state.AppState(
         config=config["state"]
     )
 

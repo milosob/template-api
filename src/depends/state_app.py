@@ -2,7 +2,7 @@ import typing
 
 import fastapi
 
-import src.state.state_app
+import src.app_state
 
 
 class DependsStateApp:
@@ -15,7 +15,7 @@ class DependsStateApp:
     def __call__(
             self,
             request: fastapi.Request
-    ) -> src.state.state_app.StateApp:
+    ) -> src.app_state.AppState:
         return request.app.state
 
 

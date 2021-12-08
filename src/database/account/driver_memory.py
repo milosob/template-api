@@ -1,16 +1,15 @@
 import datetime
 import uuid
-import time
 import typing
 
-import src.database.account.database_account_driver_base
-import src.database.account.database_account_model
+import src.database.account.driver_base
+import src.database.account.model
 import src.database.error.database_error_conflict
 import src.database.error.database_error_not_found
 
 
-class DatabaseAccountDriverMemory(src.database.account.database_account_driver_base.DatabaseAccountDriverBase):
-    impl: typing.List[src.database.account.database_account_model.DatabaseAccountModel]
+class DriverMemory(src.database.account.driver_base.DriverBase):
+    impl: typing.List[src.database.account.model.Account]
 
     def __init__(
             self
@@ -21,7 +20,7 @@ class DatabaseAccountDriverMemory(src.database.account.database_account_driver_b
     async def find_by_identifier(
             self,
             identifier: str
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+    ) -> src.database.account.model.Account:
         for entry in self.impl:
             if entry.identifier == identifier:
                 return entry
@@ -31,7 +30,7 @@ class DatabaseAccountDriverMemory(src.database.account.database_account_driver_b
     async def find_by_email(
             self,
             email: str
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+    ) -> src.database.account.model.Account:
         for entry in self.impl:
             for email_record in entry.email.reg.records:
                 if email_record.email == email:
@@ -41,8 +40,8 @@ class DatabaseAccountDriverMemory(src.database.account.database_account_driver_b
 
     async def insert(
             self,
-            model: src.database.account.database_account_model.DatabaseAccountModel
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+            model: src.database.account.model.Account
+    ) -> src.database.account.model.Account:
         try:
             _ = await self.find_by_email(
                 email=model.email.reg.primary.email
@@ -66,8 +65,8 @@ class DatabaseAccountDriverMemory(src.database.account.database_account_driver_b
 
     async def update(
             self,
-            model: src.database.account.database_account_model.DatabaseAccountModel
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+            model: src.database.account.model.Account
+    ) -> src.database.account.model.Account:
         for entry in self.impl:
             if entry.identifier == model.identifier:
                 date_now: datetime.datetime
@@ -84,8 +83,8 @@ class DatabaseAccountDriverMemory(src.database.account.database_account_driver_b
 
     async def remove(
             self,
-            model: src.database.account.database_account_model.DatabaseAccountModel
-    ) -> src.database.account.database_account_model.DatabaseAccountModel:
+            model: src.database.account.model.Account
+    ) -> src.database.account.model.Account:
         for entry in self.impl:
             if entry.identifier == model.identifier:
                 self.impl.remove(entry)
