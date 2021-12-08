@@ -3,8 +3,8 @@ INTERNAL_SERVER_ERROR = "internal-server-error"
 
 # SERVICE_UNAVAILABLE
 SERVICE_UNAVAILABLE = "service-unavailable"
-SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER = "service-unavailable-email-account-register"
-SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET = "service-unavailable-email-account-password-forget"
+SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER_CONFIRM = "service-unavailable-email-account-register-confirm"
+SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_RECOVER = "service-unavailable-email-account-password-recover"
 
 # UNAUTHORIZED
 UNAUTHORIZED_HEADER_MISSING = "unauthorized-header-missing"

@@ -125,7 +125,7 @@ async def account_post_register(
     except Exception as e:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER
+            type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_REGISTER_CONFIRM
         )
 
     return src.dto.account.AccountPostRegisterOut(
@@ -443,7 +443,7 @@ async def account_post_password_forget(
     except Exception:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_FORGET
+            type=src.error.error_type.SERVICE_UNAVAILABLE_EMAIL_ACCOUNT_PASSWORD_RECOVER
         )
 
     return src.dto.account.AccountPostPasswordForgetOut()
