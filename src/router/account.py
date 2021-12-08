@@ -574,4 +574,6 @@ async def account_post_password_recover(
         )
 
     # Password successfully changed.
-    return src.dto.account.AccountPostPasswordRecoverOut()
+    return src.dto.account.AccountPostPasswordRecoverOut(
+        password=None
+    )

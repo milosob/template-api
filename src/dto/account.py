@@ -209,7 +209,7 @@ class AccountPostPasswordRecoverInBase(pydantic.BaseModel):
 
 
 class AccountPostPasswordRecoverOutBase(pydantic.BaseModel):
-    password: str
+    password: typing.Optional[str]
 
 
 # POST ACCOUNT PASSWORD RECOVER PUBLIC
