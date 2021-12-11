@@ -18,7 +18,6 @@ async def handler(
         media_type="application/json",
         content=src.dto.error.ErrorApiOut(
             code=exc.code,
-            type=exc.type,
-            occurred_at=datetime.datetime.utcnow()
+            type=exc.type
         ).json()
     )

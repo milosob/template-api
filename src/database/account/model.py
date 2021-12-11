@@ -2,58 +2,29 @@ import datetime
 import typing
 
 
-class AccountEmailRegRecord:
-    email: str
-    primary: bool
-    confirmed_at: datetime.datetime
-
-
-class AccountEmailReg:
-    primary: AccountEmailRegRecord
-    records: typing.List[AccountEmailRegRecord]
-
-
-class AccountEmailLogRecord:
-    email: str
-    confirmed_at: datetime.datetime
-
-    type: str
-    context: object
-    occurred_at: datetime.datetime
-
-
-class AccountEmailLog:
-    records: typing.List[AccountEmailLogRecord]
+# ACCOUNT EMAIL
+class AccountEmailRecord:
+    value: str
+    confirmed: bool
 
 
 class AccountEmail:
-    reg: AccountEmailReg
-    log: AccountEmailLog
+    primary: AccountEmailRecord
+    alternative: typing.List[AccountEmailRecord]
 
 
-class AccountAuthenticationPasswordRegRecord:
-    password: str
+# ACCOUNT AUTHENTICATION PASSWORD
+class AccountAuthenticationPasswordRecord:
+    value: str
 
 
-class AccountAuthenticationPasswordReg:
-    primary: AccountAuthenticationPasswordRegRecord
+class AccountAuthenticationPassword:
+    primary: AccountAuthenticationPasswordRecord
 
 
-class AccountAuthenticationPasswordLogRecord:
-    password: str
-
-    type: str
-    context: object
-    occurred_at: datetime.datetime
-
-
-class AccountAuthenticationPasswordLog:
-    records: typing.List[AccountEmailLogRecord]
-
-
+# ACCOUNT AUTHENTICATION
 class AccountAuthentication:
-    password_reg: AccountAuthenticationPasswordReg
-    password_log: AccountAuthenticationPasswordLog
+    password: AccountAuthenticationPassword
 
 
 class Account:
@@ -61,8 +32,9 @@ class Account:
     identifier: str
 
     # BASIC USER TIME
-    created_at: datetime.datetime
-    changed_at: datetime.datetime
+    created_at: typing.Union[datetime.datetime, None]
+    changed_at: typing.Union[datetime.datetime, None]
+    removed_at: typing.Union[datetime.datetime, None]
 
     # ACCOUNT EMAIL
     email: AccountEmail
@@ -73,19 +45,15 @@ class Account:
     def __init__(
             self
     ) -> None:
-        email = AccountEmail()
-        email.reg = AccountEmailReg()
-        email.reg.primary = AccountEmailRegRecord()
-        email.reg.records = []
-        email.log = AccountEmailLog()
-        email.log.records = []
+        self.identifier = None
+        self.created_at = None
+        self.changed_at = None
+        self.removed_at = None
 
-        self.email = email
+        self.email = AccountEmail()
+        self.email.primary = AccountEmailRecord()
+        self.email.alternative = []
 
-        authentication = AccountAuthentication()
-        authentication.password_reg = AccountAuthenticationPasswordReg()
-        authentication.password_reg.primary = AccountAuthenticationPasswordRegRecord()
-        authentication.password_log = AccountAuthenticationPasswordLog()
-        authentication.password_log.records = []
-
-        self.authentication = authentication
+        self.authentication = AccountAuthentication()
+        self.authentication.password = AccountAuthenticationPassword()
+        self.authentication.password.primary = AccountAuthenticationPasswordRecord()

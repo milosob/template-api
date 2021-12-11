@@ -23,28 +23,35 @@ router = fastapi.APIRouter(
     tags=["account"]
 )
 
+error_responses: dict = {
+    fastapi.status.HTTP_400_BAD_REQUEST: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    },
+    fastapi.status.HTTP_401_UNAUTHORIZED: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    },
+    fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    },
+    fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    }
+}
+
 
 @router.post(
     path="/register",
     summary="Account register.",
     status_code=fastapi.status.HTTP_201_CREATED,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.account.AccountPostRegisterOut,
             "description": "Resource created."
         },
-        fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        }
     }
 )
 async def account_post_register(
@@ -75,18 +82,12 @@ async def account_post_register(
         pass
 
     # Assign email.
-    account.email.reg.primary.email = account_register_in.username
-    # Mark email as primary.
-    account.email.reg.primary.primary = True
+    account.email.primary.value = account_register_in.username
     # Mark account to require authentication.
-    account.email.reg.primary.confirmed_at = None
-    # Append email record to registry.
-    account.email.reg.records.append(
-        account.email.reg.primary
-    )
+    account.email.primary.confirmed = False
 
     # Hash user password.
-    account.authentication.password_reg.primary.password = app_state.service.password.password_hash(
+    account.authentication.password.primary.value = app_state.service.password.password_hash(
         password=account_register_in.password
     )
 
@@ -117,7 +118,7 @@ async def account_post_register(
 
     try:
         await app_state.service.mail.send_template(
-            to={account.email.reg.primary.email: ""},
+            to={account.email.primary.value: ""},
             locale=app_state.service.locale.by_request(request),
             template=app_state.service.template.mail_account_register,
             token=account_register_token
@@ -138,22 +139,10 @@ async def account_post_register(
     path="/register/confirm",
     summary="Account register.",
     status_code=fastapi.status.HTTP_201_CREATED,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.account.AccountPostRegisterConfirmOut,
             "description": "Resource created."
-        },
-        fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
         }
     }
 )
@@ -188,22 +177,10 @@ async def account_post_register_confirm(
     path="/authenticate",
     summary="Account authenticate.",
     status_code=fastapi.status.HTTP_200_OK,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountPostAuthenticateOut,
             "description": "Operation successful."
-        },
-        fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
         }
     }
 )
@@ -230,7 +207,7 @@ async def account_post_authenticate(
     # Verify password.
     if not app_state.service.password.password_verify(
             password=account_post_authenticate_in.password,
-            password_hash=account.authentication.password_reg.primary.password
+            password_hash=account.authentication.password.primary.value
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
@@ -269,26 +246,10 @@ async def account_post_authenticate(
     path="/authenticate/refresh",
     summary="Account authenticate refresh.",
     status_code=fastapi.status.HTTP_200_OK,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountPostAuthenticateRefreshOut,
             "description": "Operation successful."
-        },
-        fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
         }
     }
 )
@@ -358,26 +319,10 @@ async def account_post_authenticate_refresh(
     path="/password/forget",
     summary="Account password forget.",
     status_code=fastapi.status.HTTP_200_OK,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountPostPasswordForgetOut,
             "description": "Operation successful."
-        },
-        fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
         }
     }
 )
@@ -408,7 +353,7 @@ async def account_post_password_forget(
     nonce_bytes = os.urandom(16)
     signature_bytes: bytes
     signature_bytes = hmac.digest(
-        key=account.authentication.password_reg.primary.password.encode("utf-8"),
+        key=account.authentication.password.primary.value.encode("utf-8"),
         msg=nonce_bytes,
         digest="sha256"
     )
@@ -435,7 +380,7 @@ async def account_post_password_forget(
 
     try:
         await app_state.service.mail.send_template(
-            to={account.email.reg.primary.email: ""},
+            to={account.email.primary.value: ""},
             locale=app_state.service.locale.by_request(request),
             template=app_state.service.template.mail_account_password_recover,
             token=password_recover_token
@@ -453,26 +398,10 @@ async def account_post_password_forget(
     path="/password/recover",
     summary="Account password recover.",
     status_code=fastapi.status.HTTP_200_OK,
-    responses={
+    responses=error_responses | {
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountPostPasswordRecoverOut,
             "description": "Operation successful."
-        },
-        fastapi.status.HTTP_400_BAD_REQUEST: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_401_UNAUTHORIZED: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
-        },
-        fastapi.status.HTTP_503_SERVICE_UNAVAILABLE: {
-            "model": src.dto.error.ErrorApiOut,
-            "description": "Error."
         }
     }
 )
@@ -532,13 +461,13 @@ async def account_post_password_recover(
         )
 
     old_password_hash: str
-    old_password_hash = account.authentication.password_reg.primary.password
+    old_password_hash = account.authentication.password.primary.value
 
     # Verify that symmetric signature is correct.
     if not hmac.compare_digest(
             signature_bytes,
             hmac.digest(
-                key=account.authentication.password_reg.primary.password.encode("utf-8"),
+                key=account.authentication.password.primary.value.encode("utf-8"),
                 msg=nonce_bytes,
                 digest="sha256"
             )
@@ -560,7 +489,7 @@ async def account_post_password_recover(
         if not hmac.compare_digest(old_password_hash, new_password_hash):
             break
 
-    account.authentication.password_reg.primary.password = new_password_hash
+    account.authentication.password.primary.value = new_password_hash
 
     try:
         # Update account.

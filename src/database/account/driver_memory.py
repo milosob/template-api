@@ -32,8 +32,11 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
             email: str
     ) -> src.database.account.model.Account:
         for entry in self.impl:
-            for email_record in entry.email.reg.records:
-                if email_record.email == email:
+            if email == entry.email.primary.value:
+                return entry
+
+            for email_record in entry.email.alternative:
+                if email_record.value == email:
                     return entry
 
         raise src.database.error.error_not_found.ErrorNotFound()
@@ -44,7 +47,7 @@ class DriverMemory(src.database.account.driver_base.DriverBase):
     ) -> src.database.account.model.Account:
         try:
             _ = await self.find_by_email(
-                email=model.email.reg.primary.email
+                email=model.email.primary.value
             )
             raise src.database.error.error_conflict.ErrorConflict()
         except src.database.error.error_not_found.ErrorNotFound:
