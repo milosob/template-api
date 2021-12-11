@@ -6,8 +6,6 @@ import fastapi
 import fastapi.security
 
 import src.app_state
-import src.database.error.error_conflict
-import src.database.error.error_not_found
 import src.database.account.driver_base
 import src.database.account.model
 import src.depends.bearer_token
