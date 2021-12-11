@@ -1,5 +1,3 @@
-import datetime
-
 import fastapi
 import fastapi.responses
 
