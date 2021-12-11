@@ -108,9 +108,7 @@ async def account_post_register(
 
     try:
         await app_state.service.mail.send_template(
-            to={
-                next(email for email in account.emails if email.primary).value: ""
-            },
+            to={next(email for email in account.emails if email.primary).value: ""},
             locale=app_state.service.locale.by_request(request),
             template=app_state.service.template.mail_account_register,
             token=account_register_token
@@ -165,10 +163,13 @@ async def account_post_register_confirm(
         identifier=sub
     )
 
+    if account.verification.basic:
+        return src.dto.account.AccountPostRegisterConfirmOut()
+
     account.verification.basic = True
 
     account_email: src.database.account.model.AccountEmail
-    account_email = next(email for email in account.emails if email.primary)
+    account_email = next((email for email in account.emails if email.primary), None)
     account_email.confirmed = True
 
     if not await app_state.database.account.update_one(
@@ -365,9 +366,6 @@ async def account_post_password_forget(
     data = {
         "nonce": nonce_bytes.hex(),
         "signature": signature_bytes.hex()
-        # TODO
-
-
     }
 
     password_recover_token: str
