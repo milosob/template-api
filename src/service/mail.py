@@ -9,7 +9,6 @@ import jinja2
 
 class ServiceMail:
     config: dict
-    from_: dict
 
     send_cb: typing.Callable[[email.message.EmailMessage], typing.Coroutine[typing.Any, typing.Any, None]]
 
@@ -18,7 +17,7 @@ class ServiceMail:
     smtp_username: str
     smtp_password: str
     smtp_tls: bool
-    smtp_tls_context: ssl.SSLContext
+    smtp_tls_context: typing.Union[ssl.SSLContext, None]
 
     smtp_options: dict
 
@@ -27,7 +26,6 @@ class ServiceMail:
             config: dict
     ) -> None:
         self.config = config
-        self.from_ = config["from"]
 
         service_email_driver: str
         service_email_driver = config["driver"]
@@ -51,12 +49,10 @@ class ServiceMail:
             }
 
             if self.smtp_port != 25252:
-                self.smtp_options.update(
-                    {
-                        "username": self.smtp_username,
-                        "password": self.smtp_password
-                    }
-                )
+                self.smtp_options |= {
+                    "username": self.smtp_username,
+                    "password": self.smtp_password
+                }
 
             if self.smtp_port in [
                 587,
@@ -66,12 +62,10 @@ class ServiceMail:
                 self.smtp_tls = True
                 self.smtp_tls_context = ssl.create_default_context()
 
-                self.smtp_options.update(
-                    {
-                        "use_tls": self.smtp_tls,
-                        "tls_context": self.smtp_tls_context
-                    }
-                )
+                self.smtp_options |= {
+                    "use_tls": self.smtp_tls,
+                    "tls_context": self.smtp_tls_context
+                }
 
             else:
                 self.smtp_tls = False
@@ -125,7 +119,7 @@ class ServiceMail:
                         name,
                         address
                     )
-                ) for address, name in self.from_.items()
+                ) for address, name in self.config["from"].items()
             ]
         )
 

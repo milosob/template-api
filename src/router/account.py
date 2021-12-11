@@ -1,5 +1,4 @@
 import asyncio
-import datetime
 import hmac
 import os
 
@@ -62,41 +61,31 @@ async def account_post_register(
         )
 ):
     account: src.database.account.model.Account
-    account = src.database.account.model.Account()
+    account = await app_state.database.account.find_one_by_email(
+        email=account_register_in.username
+    )
 
-    date_now: datetime.datetime
-    date_now = datetime.datetime.utcnow()
-
-    try:
-        # Verify that email is available.
-        _ = await app_state.database.account.find_by_email(
-            email=account_register_in.username
-        )
-
+    if account:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
         )
 
-    except src.database.error.error_not_found.ErrorNotFound:
-        pass
+    account = src.database.account.model.Account()
 
-    # Assign email.
     account.email.primary.value = account_register_in.username
-    # Mark account to require authentication.
     account.email.primary.confirmed = False
+    account.email.records.append(
+        account.email.primary
+    )
 
-    # Hash user password.
     account.authentication.password.primary.value = app_state.service.password.password_hash(
         password=account_register_in.password
     )
 
-    try:
-        # Save account.
-        account = await app_state.database.account.insert(
+    if not await app_state.database.account.insert_one(
             model=account
-        )
-    except src.database.error.error_conflict.ErrorConflict:
+    ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
@@ -107,7 +96,6 @@ async def account_post_register(
     data: dict
     data = {}
 
-    # Issue new account register token.
     account_register_token: str
     account_register_token = app_state.service.jwt.issue(
         sub=sub,
@@ -123,7 +111,7 @@ async def account_post_register(
             template=app_state.service.template.mail_account_register,
             token=account_register_token
         )
-    except Exception as e:
+    except Exception:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE_MAIL_ACCOUNT_REGISTER_CONFIRM
@@ -192,19 +180,16 @@ async def account_post_authenticate(
         )
 ):
     account: src.database.account.model.Account
+    account = await app_state.database.account.find_one_by_email(
+        email=account_post_authenticate_in.username
+    )
 
-    try:
-        # Find account.
-        account = await app_state.database.account.find_by_email(
-            email=account_post_authenticate_in.username
-        )
-    except src.database.error.error_not_found.ErrorNotFound:
+    if not account:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
             type=src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
         )
 
-    # Verify password.
     if not app_state.service.password.password_verify(
             password=account_post_authenticate_in.password,
             password_hash=account.authentication.password.primary.value
@@ -219,7 +204,6 @@ async def account_post_authenticate(
     data: dict
     data = {}
 
-    # Issue new access_token and refresh token.
     access_token: str
     access_token = app_state.service.jwt.issue(
         sub=sub,
@@ -266,7 +250,6 @@ async def account_post_authenticate_refresh(
         required_scopes=["type:access"],
         verify_token_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
         verify_iss_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
-        # Skip expiration verification.
         verify_exp_error_type=None,
         verify_scopes_error_type=src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_SCOPES,
         options=app_state.service.jwt.verify_default_options
@@ -292,7 +275,6 @@ async def account_post_authenticate_refresh(
     # TODO
     #  After token verification update token data based on current db state.
 
-    # Issue new access_token and refresh token.
     access_token: str
     access_token = app_state.service.jwt.issue(
         sub=sub,
@@ -334,26 +316,24 @@ async def account_post_password_forget(
         )
 ):
     account: src.database.account.model.Account
+    account = await app_state.database.account.find_one_by_email(
+        email=account_post_password_forget_in.username
+    )
 
-    try:
-        # Find account.
-        account = await app_state.database.account.find_by_email(
-            email=account_post_password_forget_in.username
-        )
-    except src.database.error.error_not_found.ErrorNotFound:
-        # Account does not exist.
+    if not account:
         await asyncio.sleep(
             delay=1
         )
         return src.dto.account.AccountPostPasswordForgetOut()
 
-    # Build recover context to auto revoke token if password was changed.
-    # It's possible to request many recovery links, however as soon password will be changed mac verification will fail.
+    old_password_hash: str
+    old_password_hash = account.authentication.password.primary.value
+
     nonce_bytes: bytes
     nonce_bytes = os.urandom(16)
     signature_bytes: bytes
     signature_bytes = hmac.digest(
-        key=account.authentication.password.primary.value.encode("utf-8"),
+        key=old_password_hash.encode("utf-8"),
         msg=nonce_bytes,
         digest="sha256"
     )
@@ -369,7 +349,6 @@ async def account_post_password_forget(
         #  This can be verified in stateless manner during recovery.
     }
 
-    # Issue JWT password recover token.
     password_recover_token: str
     password_recover_token = app_state.service.jwt.issue(
         sub=sub,
@@ -448,13 +427,11 @@ async def account_post_password_recover(
     sub = payload["sub"]
 
     account: src.database.account.model.Account
+    account = await app_state.database.account.find_one_by_identifier(
+        identifier=sub
+    )
 
-    try:
-        # Find account.
-        account = await app_state.database.account.find_by_identifier(
-            identifier=sub
-        )
-    except src.database.error.error_not_found.ErrorNotFound:
+    if not account:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
             type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID
@@ -463,16 +440,14 @@ async def account_post_password_recover(
     old_password_hash: str
     old_password_hash = account.authentication.password.primary.value
 
-    # Verify that symmetric signature is correct.
     if not hmac.compare_digest(
             signature_bytes,
             hmac.digest(
-                key=account.authentication.password.primary.value.encode("utf-8"),
+                key=old_password_hash.encode("utf-8"),
                 msg=nonce_bytes,
                 digest="sha256"
             )
     ):
-        # Password was already changed, token expired.
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
             type=src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED
@@ -482,27 +457,22 @@ async def account_post_password_recover(
 
     while True:
         new_password_hash = app_state.service.password.password_hash(
-            account_post_password_recover_in.password
+            password=account_post_password_recover_in.password
         )
 
-        # The chance it will not break is like 1 / ( 2**128 * (password repetition probability))
         if not hmac.compare_digest(old_password_hash, new_password_hash):
             break
 
     account.authentication.password.primary.value = new_password_hash
 
-    try:
-        # Update account.
-        account = await app_state.database.account.update(
-            account
-        )
-    except src.database.error.error_not_found.ErrorNotFound:
+    if not await app_state.database.account.update_one(
+            model=account
+    ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
             type=src.error.error_type.SERVICE_UNAVAILABLE
         )
 
-    # Password successfully changed.
     return src.dto.account.AccountPostPasswordRecoverOut(
         password=None
     )

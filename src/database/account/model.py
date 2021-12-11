@@ -2,58 +2,82 @@ import datetime
 import typing
 
 
+class Base(dict):
+    pass
+
+
 # ACCOUNT EMAIL
-class AccountEmailRecord:
+
+class AccountEmailRecord(Base):
     value: str
     confirmed: bool
 
 
-class AccountEmail:
-    primary: AccountEmailRecord
-    alternative: typing.List[AccountEmailRecord]
+class AccountEmail(Base):
+    primary: AccountEmailRecord = AccountEmailRecord()
+    records: typing.List[AccountEmailRecord] = []
 
 
 # ACCOUNT AUTHENTICATION PASSWORD
-class AccountAuthenticationPasswordRecord:
+
+class AccountAuthenticationPasswordRecord(Base):
     value: str
 
 
-class AccountAuthenticationPassword:
-    primary: AccountAuthenticationPasswordRecord
+class AccountAuthenticationPassword(Base):
+    primary: AccountAuthenticationPasswordRecord = AccountAuthenticationPasswordRecord()
 
 
 # ACCOUNT AUTHENTICATION
-class AccountAuthentication:
-    password: AccountAuthenticationPassword
+
+class AccountAuthentication(Base):
+    password: AccountAuthenticationPassword = AccountAuthenticationPassword()
 
 
-class Account:
-    # BASIC USER INFO
-    identifier: str
+class Account(Base):
+    _id: typing.Any = None
 
-    # BASIC USER TIME
-    created_at: typing.Union[datetime.datetime, None]
-    changed_at: typing.Union[datetime.datetime, None]
-    removed_at: typing.Union[datetime.datetime, None]
+    version: int = 1
 
-    # ACCOUNT EMAIL
-    email: AccountEmail
+    cat: typing.Union[datetime.datetime, None] = None
+    uat: typing.Union[datetime.datetime, None] = None
+    rat: typing.Union[datetime.datetime, None] = None
 
-    # ACCOUNT AUTHENTICATION
-    authentication: AccountAuthentication
+    email: AccountEmail = AccountEmail()
 
-    def __init__(
+    authentication: AccountAuthentication = AccountAuthentication()
+
+    @property
+    def identifier(
             self
+    ) -> typing.Union[str, None]:
+        if self._id:
+            return str(self._id)
+        return None
+
+    @identifier.setter
+    def identifier(
+            self,
+            value: str
     ) -> None:
-        self.identifier = None
-        self.created_at = None
-        self.changed_at = None
-        self.removed_at = None
+        self._id = value
 
-        self.email = AccountEmail()
-        self.email.primary = AccountEmailRecord()
-        self.email.alternative = []
+    def notify_create(
+            self,
+            date: datetime.datetime = datetime.datetime.utcnow()
+    ) -> None:
+        self.cat = date
+        self.uat = date
 
-        self.authentication = AccountAuthentication()
-        self.authentication.password = AccountAuthenticationPassword()
-        self.authentication.password.primary = AccountAuthenticationPasswordRecord()
+    def notify_update(
+            self,
+            date: datetime.datetime = datetime.datetime.utcnow()
+    ) -> None:
+        self.uat = date
+
+    def notify_remove(
+            self,
+            date: datetime.datetime = datetime.datetime.utcnow()
+    ) -> None:
+        self.uat = date
+        self.rat = date

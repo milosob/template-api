@@ -6,6 +6,7 @@ import pydantic
 
 # POST ACCOUNT REGISTER PRIVATE
 
+# noinspection PyMethodParameters
 class AccountPostRegisterInBase(pydantic.BaseModel):
     username: str = fastapi.Body(
         ...
@@ -70,6 +71,7 @@ class AccountPostRegisterConfirmOut(AccountPostRegisterConfirmOutBase):
 
 # POST ACCOUNT AUTHENTICATE PRIVATE
 
+# noinspection PyMethodParameters
 class AccountPostAuthenticateInBase(pydantic.BaseModel):
     username: str = fastapi.Body(
         ...
@@ -114,6 +116,7 @@ class AccountPostAuthenticateOut(AccountPostAuthenticateOutBase):
 
 # POST ACCOUNT AUTHENTICATE REFRESH PRIVATE
 
+# noinspection PyMethodParameters
 class AccountPostAuthenticateRefreshInBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
@@ -154,6 +157,7 @@ class AccountPostAuthenticateRefreshOut(AccountPostAuthenticateRefreshOutBase):
 
 # POST ACCOUNT PASSWORD FORGET PRIVATE
 
+# noinspection PyMethodParameters
 class AccountPostPasswordForgetInBase(pydantic.BaseModel):
     username: str
 
@@ -183,6 +187,7 @@ class AccountPostPasswordForgetOut(AccountPostPasswordForgetOutBase):
 
 # POST ACCOUNT PASSWORD RECOVER PRIVATE
 
+# noinspection PyMethodParameters
 class AccountPostPasswordRecoverInBase(pydantic.BaseModel):
     password: str
 

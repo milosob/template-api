@@ -25,8 +25,14 @@
     "state": {
         "database": {
             "account": {
-                "driver": "memory",
-                "memory": {
+                "driver": "mongo",
+                "mongo": {
+                    "name": "core",
+                    "collection": "account",
+                    "auth": "uri",
+                    "uri": {
+                        "uri": "mongodb://0.0.0.0:27017"
+                    }
                 }
             }
         },

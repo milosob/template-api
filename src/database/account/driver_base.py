@@ -1,3 +1,5 @@
+import typing
+
 import src.database.account.model
 import src.database.error.error_not_implemented
 
@@ -9,32 +11,46 @@ class DriverBase:
     ) -> None:
         pass
 
-    async def find_by_identifier(
+    async def find_one_by_identifier(
             self,
             identifier: str
-    ) -> src.database.account.model.Account:
-        raise src.database.error.error_not_implemented.ErrorNotImplemented()
+    ) -> typing.Union[src.database.account.model.Account, None]:
+        pass
 
-    async def find_by_email(
+    async def find_one_by_email(
             self,
             email: str
-    ) -> src.database.account.model.Account:
-        raise src.database.error.error_not_implemented.ErrorNotImplemented()
+    ) -> typing.Union[src.database.account.model.Account, None]:
+        pass
 
-    async def insert(
+    async def insert_one(
             self,
             model: src.database.account.model.Account
-    ) -> src.database.account.model.Account:
-        raise src.database.error.error_not_implemented.ErrorNotImplemented()
+    ) -> bool:
+        pass
 
-    async def update(
+    async def remove_by_identifier(
+            self,
+            identifier: str,
+            model: src.database.account.model.Account
+    ) -> bool:
+        pass
+
+    async def remove_one(
             self,
             model: src.database.account.model.Account
-    ) -> src.database.account.model.Account:
-        raise src.database.error.error_not_implemented.ErrorNotImplemented()
+    ) -> bool:
+        pass
 
-    async def remove(
+    async def update_one_by_identifier(
+            self,
+            identifier: str,
+            model: src.database.account.model.Account
+    ) -> bool:
+        pass
+
+    async def update_one(
             self,
             model: src.database.account.model.Account
-    ) -> src.database.account.model.Account:
-        raise src.database.error.error_not_implemented.ErrorNotImplemented()
+    ) -> bool:
+        pass
