@@ -135,7 +135,7 @@ class DriverMongo(src.database.account.driver_base.DriverBase):
         result: typing.Any
         result = self._impl.find_one(
             filter={
-                "email.records.value": {
+                "emails.value": {
                     "$eq": email
                 }
             }
