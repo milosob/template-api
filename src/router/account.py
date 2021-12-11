@@ -171,7 +171,7 @@ async def account_post_register_confirm(
     account_email = next(email for email in account.emails if email.primary)
     account_email.confirmed = True
 
-    if not await app_state.database.account.update_one_emails(
+    if not await app_state.database.account.update_one(
             model=account
     ):
         raise src.error.error.Error(
@@ -366,8 +366,8 @@ async def account_post_password_forget(
         "nonce": nonce_bytes.hex(),
         "signature": signature_bytes.hex()
         # TODO
-        #  Consider including client source IP.
-        #  This can be verified in stateless manner during recovery.
+
+
     }
 
     password_recover_token: str
