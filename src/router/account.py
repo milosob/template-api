@@ -156,7 +156,27 @@ async def account_post_register_confirm(
     sub: str
     sub = payload["sub"]
 
-    # TODO
+    account: src.database.account.model.Account
+    account = await app_state.database.account.find_one_by_identifier(
+        identifier=sub
+    )
+
+    if account.email.primary.confirmed:
+        return src.dto.account.AccountPostRegisterConfirmOut()
+
+    account.email.primary.confirmed = True
+
+    for record in account.email.records:
+        if record.value == account.email.primary.value:
+            record.confirmed = True
+
+    if not await app_state.database.account.update_one(
+            model=account
+    ):
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            type=src.error.error_type.SERVICE_UNAVAILABLE
+        )
 
     return src.dto.account.AccountPostRegisterConfirmOut()
 
