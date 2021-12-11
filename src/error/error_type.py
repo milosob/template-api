@@ -34,13 +34,4 @@ UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES = "unauthorized-password-recover-toke
 ACCOUNT_REGISTER_USERNAME_TAKEN = "account-register-username-taken"
 
 # ACCOUNT AUTHENTICATE
-ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS = "account-authenticate-invalid-credentials"
-ACCOUNT_AUTHENTICATE_UNAUTHORIZED_SCOPES = "account-authenticate-unauthorized-scopes"
-
-# CONFIRM
-CONFIRM_TOKEN_INVALID = "confirm-token-failure"
-CONFIRM_TOKEN_NOT_FOUND = "confirm-token-not-found"
-CONFIRM_TOKEN_EXPIRED = "confirm-token-expired"
-CONFIRM_TOKEN_CONSUMED = "confirm-token-consumed"
-
-CONFIRM_TOKEN_EMAIL_NOT_FOUND = "confirm-token-email-not-found"
+UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID = "unauthorized-account-authenticate-credentials-invalid"

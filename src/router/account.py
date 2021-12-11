@@ -224,7 +224,7 @@ async def account_post_authenticate(
     except src.database.error.error_not_found.ErrorNotFound:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
-            type=src.error.error_type.ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS
+            type=src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
         )
 
     # Verify password.
@@ -234,7 +234,7 @@ async def account_post_authenticate(
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
-            type=src.error.error_type.ACCOUNT_AUTHENTICATE_INVALID_CREDENTIALS
+            type=src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
         )
 
     sub: str

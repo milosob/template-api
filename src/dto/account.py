@@ -77,9 +77,6 @@ class AccountPostAuthenticateInBase(pydantic.BaseModel):
     password: str = fastapi.Body(
         ...
     )
-    scopes: typing.Optional[typing.List[str]] = fastapi.Body(
-        ...
-    )
 
     @pydantic.validator("username")
     def validator_username(
@@ -92,15 +89,6 @@ class AccountPostAuthenticateInBase(pydantic.BaseModel):
 
     @pydantic.validator("password")
     def validator_password(
-            cls,
-            v: str
-    ) -> str:
-        # TODO
-
-        return v
-
-    @pydantic.validator("scopes")
-    def validator_scopes(
             cls,
             v: str
     ) -> str:
