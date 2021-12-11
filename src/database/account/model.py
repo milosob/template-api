@@ -7,45 +7,42 @@ class Base(dict):
 
 
 # ACCOUNT EMAIL
-
-class AccountEmailRecord(Base):
-    value: str
-    confirmed: bool
-
-
 class AccountEmail(Base):
-    primary: AccountEmailRecord = AccountEmailRecord()
-    records: typing.List[AccountEmailRecord] = []
+    value: str = None
+    primary: bool = False
+    confirmed: bool = False
 
 
 # ACCOUNT AUTHENTICATION PASSWORD
-
-class AccountAuthenticationPasswordRecord(Base):
-    value: str
-
-
 class AccountAuthenticationPassword(Base):
-    primary: AccountAuthenticationPasswordRecord = AccountAuthenticationPasswordRecord()
+    value: str = None
+
+
+class AccountAuthenticationPasswords(Base):
+    primary: AccountAuthenticationPassword = AccountAuthenticationPassword()
 
 
 # ACCOUNT AUTHENTICATION
-
 class AccountAuthentication(Base):
-    password: AccountAuthenticationPassword = AccountAuthenticationPassword()
+    passwords: AccountAuthenticationPasswords = AccountAuthenticationPasswords()
+
+
+class AccountVerification(Base):
+    basic: bool = False
 
 
 class Account(Base):
     _id: typing.Any = None
+    _rev: int = 1
 
-    version: int = 1
+    emails: typing.List[AccountEmail] = []
 
-    cat: typing.Union[datetime.datetime, None] = None
-    uat: typing.Union[datetime.datetime, None] = None
-    rat: typing.Union[datetime.datetime, None] = None
-
-    email: AccountEmail = AccountEmail()
+    verification: AccountVerification = AccountVerification()
 
     authentication: AccountAuthentication = AccountAuthentication()
+
+    created_at: typing.Union[datetime.datetime, None] = None
+    updated_at: typing.Union[datetime.datetime, None] = None
 
     @property
     def identifier(
@@ -66,18 +63,11 @@ class Account(Base):
             self,
             date: datetime.datetime = datetime.datetime.utcnow()
     ) -> None:
-        self.cat = date
-        self.uat = date
+        self.created_at = date
+        self.updated_at = date
 
     def notify_update(
             self,
             date: datetime.datetime = datetime.datetime.utcnow()
     ) -> None:
-        self.uat = date
-
-    def notify_remove(
-            self,
-            date: datetime.datetime = datetime.datetime.utcnow()
-    ) -> None:
-        self.uat = date
-        self.rat = date
+        self.updated_at = date

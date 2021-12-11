@@ -70,14 +70,18 @@ async def account_post_register(
         )
 
     account = src.database.account.model.Account()
+    account_email: src.database.account.model.AccountEmail
+    account_email = src.database.account.model.AccountEmail()
 
-    account.email.primary.value = account_register_in.username
-    account.email.primary.confirmed = False
-    account.email.records.append(
-        account.email.primary
+    account_email.value = account_register_in.username
+    account_email.primary = True
+    account_email.confirmed = False
+
+    account.emails.append(
+        account_email
     )
 
-    account.authentication.password.primary.value = app_state.service.password.password_hash(
+    account.authentication.passwords.primary.value = app_state.service.password.password_hash(
         password=account_register_in.password
     )
 
@@ -104,7 +108,9 @@ async def account_post_register(
 
     try:
         await app_state.service.mail.send_template(
-            to={account.email.primary.value: ""},
+            to={
+                next(email for email in account.emails if email.primary).value: ""
+            },
             locale=app_state.service.locale.by_request(request),
             template=app_state.service.template.mail_account_register,
             token=account_register_token
@@ -159,16 +165,13 @@ async def account_post_register_confirm(
         identifier=sub
     )
 
-    if account.email.primary.confirmed:
-        return src.dto.account.AccountPostRegisterConfirmOut()
+    account.verification.basic = True
 
-    account.email.primary.confirmed = True
+    account_email: src.database.account.model.AccountEmail
+    account_email = next(email for email in account.emails if email.primary)
+    account_email.confirmed = True
 
-    for record in account.email.records:
-        if record.value == account.email.primary.value:
-            record.confirmed = True
-
-    if not await app_state.database.account.update_one(
+    if not await app_state.database.account.update_one_emails(
             model=account
     ):
         raise src.error.error.Error(
@@ -210,7 +213,7 @@ async def account_post_authenticate(
 
     if not app_state.service.password.password_verify(
             password=account_post_authenticate_in.password,
-            password_hash=account.authentication.password.primary.value
+            password_hash=account.authentication.passwords.primary.value
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_401_UNAUTHORIZED,
@@ -345,7 +348,7 @@ async def account_post_password_forget(
         return src.dto.account.AccountPostPasswordForgetOut()
 
     old_password_hash: str
-    old_password_hash = account.authentication.password.primary.value
+    old_password_hash = account.authentication.passwords.primary.value
 
     nonce_bytes: bytes
     nonce_bytes = os.urandom(16)
@@ -377,7 +380,7 @@ async def account_post_password_forget(
 
     try:
         await app_state.service.mail.send_template(
-            to={account.email.primary.value: ""},
+            to={next(email for email in account.emails if email.primary).value: ""},
             locale=app_state.service.locale.by_request(request),
             template=app_state.service.template.mail_account_password_recover,
             token=password_recover_token
@@ -456,7 +459,7 @@ async def account_post_password_recover(
         )
 
     old_password_hash: str
-    old_password_hash = account.authentication.password.primary.value
+    old_password_hash = account.authentication.passwords.primary.value
 
     if not hmac.compare_digest(
             signature_bytes,
@@ -481,9 +484,9 @@ async def account_post_password_recover(
         if not hmac.compare_digest(old_password_hash, new_password_hash):
             break
 
-    account.authentication.password.primary.value = new_password_hash
+    account.authentication.passwords.primary.value = new_password_hash
 
-    if not await app_state.database.account.update_one(
+    if not await app_state.database.account.update_one_authentication_password_primary(
             model=account
     ):
         raise src.error.error.Error(
