@@ -8,7 +8,7 @@ class DriverBase:
     def __init__(
             self
     ) -> None:
-        raise NotImplementedError()
+        pass
 
     async def insert_one(
             self,
