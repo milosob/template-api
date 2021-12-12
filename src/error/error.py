@@ -1,3 +1,4 @@
+# noinspection PyShadowingBuiltins
 class Error(Exception):
     code: int
     type: str

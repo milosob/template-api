@@ -6,7 +6,8 @@ import fastapi
 import fastapi.security
 
 import src.app_state
-import src.database.account.driver_base
+import src.database.account.filter
+import src.database.account.update
 import src.database.account.model
 import src.depends.bearer_token
 import src.depends.app_state
@@ -54,13 +55,15 @@ error_responses: dict = {
 async def account_post_register(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_register_in: src.dto.account.AccountPostRegisterIn = fastapi.Body(
+        account_post_register_in: src.dto.account.AccountPostRegisterIn = fastapi.Body(
             ...
         )
 ):
     account: src.database.account.model.Account
-    account = await app_state.database.account.find_one_by_email(
-        email=account_register_in.username
+    account = app_state.database.account.find_one(
+        filter=src.database.account.filter.email(
+            value=account_post_register_in.username
+        )
     )
 
     if account:
@@ -70,10 +73,10 @@ async def account_post_register(
         )
 
     account = src.database.account.model.Account()
+
     account_email: src.database.account.model.AccountEmail
     account_email = src.database.account.model.AccountEmail()
-
-    account_email.value = account_register_in.username
+    account_email.value = account_post_register_in.username
     account_email.primary = True
     account_email.confirmed = False
 
@@ -82,16 +85,23 @@ async def account_post_register(
     )
 
     account.authentication.passwords.primary.value = app_state.service.password.password_hash(
-        password=account_register_in.password
+        password=account_post_register_in.password
     )
 
-    if not await app_state.database.account.insert_one(
-            model=account
-    ):
+    account.notify_create()
+
+    account_inserted: src.database.account.model.Account
+    account_inserted = app_state.database.account.insert_one(
+        model=account
+    )
+
+    if not account_inserted:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_400_BAD_REQUEST,
             type=src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
         )
+
+    account = account_inserted
 
     sub: str
     sub = account.identifier
@@ -120,7 +130,7 @@ async def account_post_register(
         )
 
     return src.dto.account.AccountPostRegisterOut(
-        username=account_register_in.username,
+        username=account_post_register_in.username,
         password=None
     )
 
@@ -159,21 +169,43 @@ async def account_post_register_confirm(
     sub = payload["sub"]
 
     account: src.database.account.model.Account
-    account = await app_state.database.account.find_one_by_identifier(
-        identifier=sub
+    account = app_state.database.account.find_one(
+        filter=src.database.account.filter.identifier(
+            value=sub
+        )
     )
 
-    if account.verification.basic:
+    if account.verification.email:
         return src.dto.account.AccountPostRegisterConfirmOut()
 
-    account.verification.basic = True
+    account.verification.email = True
 
     account_email: src.database.account.model.AccountEmail
     account_email = next((email for email in account.emails if email.primary), None)
+
+    if not account_email:
+        raise src.error.error.Error(
+            code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
+            type=src.error.error_type.INTERNAL_SERVER_ERROR
+        )
+
     account_email.confirmed = True
 
-    if not await app_state.database.account.update_one(
-            model=account
+    account.notify_update()
+
+    if not app_state.database.account.update_one(
+            filter=src.database.account.filter.identifier(
+                value=sub
+            ),
+            update={
+                "$set": src.database.account.update.verification(
+                    value=account
+                ) | src.database.account.update.emails(
+                    value=account
+                ) | src.database.account.update.updated_at(
+                    value=account
+                )
+            }
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -202,8 +234,10 @@ async def account_post_authenticate(
         )
 ):
     account: src.database.account.model.Account
-    account = await app_state.database.account.find_one_by_email(
-        email=account_post_authenticate_in.username
+    account = app_state.database.account.find_one(
+        filter=src.database.account.filter.email(
+            value=account_post_authenticate_in.username
+        )
     )
 
     if not account:
@@ -338,8 +372,10 @@ async def account_post_password_forget(
         )
 ):
     account: src.database.account.model.Account
-    account = await app_state.database.account.find_one_by_email(
-        email=account_post_password_forget_in.username
+    account = app_state.database.account.find_one(
+        filter=src.database.account.filter.email(
+            value=account_post_password_forget_in.username
+        )
     )
 
     if not account:
@@ -446,8 +482,10 @@ async def account_post_password_recover(
     sub = payload["sub"]
 
     account: src.database.account.model.Account
-    account = await app_state.database.account.find_one_by_identifier(
-        identifier=sub
+    account = app_state.database.account.find_one(
+        filter=src.database.account.filter.identifier(
+            value=sub
+        )
     )
 
     if not account:
@@ -484,8 +522,15 @@ async def account_post_password_recover(
 
     account.authentication.passwords.primary.value = new_password_hash
 
-    if not await app_state.database.account.update_one_authentication_password_primary(
-            model=account
+    if not app_state.database.account.update_one(
+            filter=src.database.account.filter.identifier(
+                value=account.identifier
+            ),
+            update=src.database.account.update.authentication_passwords_primary(
+                value=account
+            ) | src.database.account.update.updated_at(
+                value=account
+            )
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,

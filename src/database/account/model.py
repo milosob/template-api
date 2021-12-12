@@ -6,34 +6,112 @@ class Base(dict):
     pass
 
 
-# ACCOUNT EMAIL
-class AccountEmail(Base):
+class AccountEmail:
     value: str = None
     primary: bool = False
     confirmed: bool = False
 
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "value": self.value,
+            "primary": self.primary,
+            "confirmed": self.confirmed
+        }
 
-# ACCOUNT AUTHENTICATION PASSWORD
-class AccountAuthenticationPassword(Base):
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = AccountEmail()
+        instance.value = d["value"]
+        instance.primary = d["primary"]
+        instance.confirmed = d["confirmed"]
+        return instance
+
+
+class AccountAuthenticationPassword:
     value: str = None
 
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "value": self.value,
+        }
 
-class AccountAuthenticationPasswords(Base):
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = AccountAuthenticationPassword()
+        instance.value = d["value"]
+        return instance
+
+
+class AccountAuthenticationPasswords:
     primary: AccountAuthenticationPassword = AccountAuthenticationPassword()
 
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "primary": self.primary.to_dict(),
+        }
 
-# ACCOUNT AUTHENTICATION
-class AccountAuthentication(Base):
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = AccountAuthenticationPasswords()
+        instance.primary = AccountAuthenticationPassword.from_dict(d["primary"])
+        return instance
+
+
+class AccountAuthentication:
     passwords: AccountAuthenticationPasswords = AccountAuthenticationPasswords()
 
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "passwords": self.passwords.to_dict(),
+        }
 
-class AccountVerification(Base):
-    basic: bool = False
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = AccountAuthentication()
+        instance.passwords = AccountAuthenticationPasswords.from_dict(d["passwords"])
+        return instance
 
 
-class Account(Base):
-    _id: typing.Any = None
-    _rev: int = 1
+class AccountVerification:
+    email: bool = False
+
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "email": self.email
+        }
+
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = AccountVerification()
+        instance.email = d["email"]
+        return instance
+
+
+class Account:
+    _id: str = None
+    _ver: int = 1
+    _cat: typing.Union[datetime.datetime, None] = None
+    _uat: typing.Union[datetime.datetime, None] = None
 
     emails: typing.List[AccountEmail] = []
 
@@ -41,33 +119,60 @@ class Account(Base):
 
     authentication: AccountAuthentication = AccountAuthentication()
 
-    created_at: typing.Union[datetime.datetime, None] = None
-    updated_at: typing.Union[datetime.datetime, None] = None
-
     @property
     def identifier(
             self
     ) -> typing.Union[str, None]:
-        if self._id:
-            return str(self._id)
-        return None
+        return self._id
 
-    @identifier.setter
-    def identifier(
-            self,
-            value: str
-    ) -> None:
-        self._id = value
+    @property
+    def created_at(
+            self
+    ) -> typing.Union[datetime.datetime, None]:
+        return self._cat
+
+    @property
+    def updated_at(
+            self
+    ) -> typing.Union[datetime.datetime, None]:
+        return self._uat
 
     def notify_create(
             self,
             date: datetime.datetime = datetime.datetime.utcnow()
     ) -> None:
-        self.created_at = date
-        self.updated_at = date
+        self._cat = date
+        self._uat = date
 
     def notify_update(
             self,
             date: datetime.datetime = datetime.datetime.utcnow()
     ) -> None:
-        self.updated_at = date
+        self._cat = date
+
+    def to_dict(
+            self
+    ) -> dict:
+        return {
+            "_id": self._id,
+            "_ver": self._ver,
+            "_cat": self._cat,
+            "_uat": self._uat,
+            "emails": [x.to_dict() for x in self.emails],
+            "verification": self.verification.to_dict(),
+            "authentication": self.authentication.to_dict(),
+        }
+
+    @staticmethod
+    def from_dict(
+            d: dict
+    ):
+        instance = Account()
+        instance._id = d["_id"]
+        instance._ver = d["_ver"]
+        instance._cat = d["_cat"]
+        instance._uat = d["_uat"]
+        instance.emails = [AccountEmail.from_dict(x) for x in d["emails"]]
+        instance.verification = AccountVerification.from_dict(d["verification"])
+        instance.authentication = AccountAuthentication.from_dict(d["authentication"])
+        return instance

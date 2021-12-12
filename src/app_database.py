@@ -1,13 +1,12 @@
 import typing
 
-import src.database.account.driver_base
 import src.database.account.driver_mongo
 
 
 class AppDatabase:
     config: dict
 
-    account: src.database.account.driver_base.DriverBase
+    account: src.database.account.driver_mongo.DriverMongo
 
     def __init__(
             self,
