@@ -171,10 +171,10 @@ async def account_post_register_confirm(
     if not app_state.database.account.update_one(
             account,
             {
-                "$set": (
-                        src.database.account.update.verification,
-                        src.database.account.update.emails
-                )
+                "$set": {
+                    src.database.account.update.verification,
+                    src.database.account.update.emails
+                }
             }
     ):
         raise src.error.error.Error(
@@ -403,9 +403,9 @@ async def account_post_password_recover(
     if not app_state.database.account.update_one(
             account,
             {
-                "$set": (
-                        src.database.account.update.authentication_passwords_primary
-                )
+                "$set": {
+                    src.database.account.update.authentication_passwords_primary
+                }
             }
     ):
         raise src.error.error.Error(
