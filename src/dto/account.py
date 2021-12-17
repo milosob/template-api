@@ -4,7 +4,7 @@ import fastapi
 import pydantic
 
 
-# POST ACCOUNT REGISTER PRIVATE
+# POST ACCOUNT REGISTER
 
 # noinspection PyMethodParameters
 class AccountPostRegisterInBase(pydantic.BaseModel):
@@ -34,24 +34,26 @@ class AccountPostRegisterInBase(pydantic.BaseModel):
         return v
 
 
+class AccountPostRegisterIn(AccountPostRegisterInBase):
+    pass
+
+
 class AccountPostRegisterOutBase(pydantic.BaseModel):
     username: str
     password: typing.Optional[str]
-
-
-# POST ACCOUNT REGISTER PUBLIC
-
-class AccountPostRegisterIn(AccountPostRegisterInBase):
-    pass
 
 
 class AccountPostRegisterOut(AccountPostRegisterOutBase):
     pass
 
 
-# POST ACCOUNT REGISTER CONFIRM PRIVATE
+# POST ACCOUNT REGISTER CONFIRM
 
 class AccountPostRegisterConfirmInBase(pydantic.BaseModel):
+    pass
+
+
+class AccountPostRegisterConfirmIn(AccountPostRegisterConfirmInBase):
     pass
 
 
@@ -59,17 +61,11 @@ class AccountPostRegisterConfirmOutBase(pydantic.BaseModel):
     pass
 
 
-# POST ACCOUNT REGISTER CONFIRM PUBLIC
-
-class AccountPostRegisterConfirmIn(AccountPostRegisterConfirmInBase):
-    pass
-
-
 class AccountPostRegisterConfirmOut(AccountPostRegisterConfirmOutBase):
     pass
 
 
-# POST ACCOUNT AUTHENTICATE PRIVATE
+# POST ACCOUNT AUTHENTICATE
 
 # noinspection PyMethodParameters
 class AccountPostAuthenticateInBase(pydantic.BaseModel):
@@ -99,22 +95,20 @@ class AccountPostAuthenticateInBase(pydantic.BaseModel):
         return v
 
 
+class AccountPostAuthenticateIn(AccountPostAuthenticateInBase):
+    pass
+
+
 class AccountPostAuthenticateOutBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
-
-
-# POST ACCOUNT AUTHENTICATE PUBLIC
-
-class AccountPostAuthenticateIn(AccountPostAuthenticateInBase):
-    pass
 
 
 class AccountPostAuthenticateOut(AccountPostAuthenticateOutBase):
     pass
 
 
-# POST ACCOUNT AUTHENTICATE REFRESH PRIVATE
+# POST ACCOUNT AUTHENTICATE REFRESH
 
 # noinspection PyMethodParameters
 class AccountPostAuthenticateRefreshInBase(pydantic.BaseModel):
@@ -140,22 +134,20 @@ class AccountPostAuthenticateRefreshInBase(pydantic.BaseModel):
         return v
 
 
+class AccountPostAuthenticateRefreshIn(AccountPostAuthenticateRefreshInBase):
+    pass
+
+
 class AccountPostAuthenticateRefreshOutBase(pydantic.BaseModel):
     access_token: str
     refresh_token: str
-
-
-# POST ACCOUNT AUTHENTICATE REFRESH PUBLIC
-
-class AccountPostAuthenticateRefreshIn(AccountPostAuthenticateRefreshInBase):
-    pass
 
 
 class AccountPostAuthenticateRefreshOut(AccountPostAuthenticateRefreshOutBase):
     pass
 
 
-# POST ACCOUNT PASSWORD FORGET PRIVATE
+# POST ACCOUNT PASSWORD FORGET
 
 # noinspection PyMethodParameters
 class AccountPostPasswordForgetInBase(pydantic.BaseModel):
@@ -171,13 +163,11 @@ class AccountPostPasswordForgetInBase(pydantic.BaseModel):
         return v
 
 
-class AccountPostPasswordForgetOutBase(pydantic.BaseModel):
+class AccountPostPasswordForgetIn(AccountPostPasswordForgetInBase):
     pass
 
 
-# POST ACCOUNT PASSWORD FORGET PUBLIC
-
-class AccountPostPasswordForgetIn(AccountPostPasswordForgetInBase):
+class AccountPostPasswordForgetOutBase(pydantic.BaseModel):
     pass
 
 
@@ -185,7 +175,7 @@ class AccountPostPasswordForgetOut(AccountPostPasswordForgetOutBase):
     pass
 
 
-# POST ACCOUNT PASSWORD RECOVER PRIVATE
+# POST ACCOUNT PASSWORD RECOVER
 
 # noinspection PyMethodParameters
 class AccountPostPasswordRecoverInBase(pydantic.BaseModel):
@@ -201,14 +191,12 @@ class AccountPostPasswordRecoverInBase(pydantic.BaseModel):
         return v
 
 
-class AccountPostPasswordRecoverOutBase(pydantic.BaseModel):
-    password: typing.Optional[str]
-
-
-# POST ACCOUNT PASSWORD RECOVER PUBLIC
-
 class AccountPostPasswordRecoverIn(AccountPostPasswordRecoverInBase):
     pass
+
+
+class AccountPostPasswordRecoverOutBase(pydantic.BaseModel):
+    password: typing.Optional[str]
 
 
 class AccountPostPasswordRecoverOut(AccountPostPasswordRecoverOutBase):
