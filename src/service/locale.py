@@ -67,9 +67,9 @@ class ServiceLocale:
             self,
             request: fastapi.Request
     ) -> str:
-        if "accept-language" in request.headers:
+        try:
             return self.by_accept_language_header(
-                value=request.headers["accept-language"]
+                request.headers["accept-language"]
             )
-        else:
+        except KeyError:
             return self.default

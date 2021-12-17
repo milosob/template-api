@@ -25,7 +25,7 @@ class Driver:
     ) -> typing.Union[src.database.account.model.Account, None]:
         result: typing.Any
         result = self._impl.find_one(
-            filter=filter
+            filter
         )
 
         if not result:
@@ -49,9 +49,12 @@ class Driver:
 
         result: pymongo.results.UpdateResult
         result = self._impl.find_one_and_update(
-            filter=filter,
-            update=update,
-            return_document=pymongo.ReturnDocument.AFTER
+            filter,
+            update,
+            None,
+            None,
+            False,
+            pymongo.ReturnDocument.AFTER
         )
 
         if not result.acknowledged:
@@ -59,7 +62,7 @@ class Driver:
 
         result.raw_result["_id"] = str(result.raw_result["_id"])
 
-        return src.database.account.model.Account.from_mongo_dict(d=result.raw_result)
+        return src.database.account.model.Account.from_mongo_dict(result.raw_result)
 
     def find_one_and_delete(
             self,
@@ -67,7 +70,7 @@ class Driver:
     ) -> typing.Union[src.database.account.model.Account, None]:
         result: pymongo.results.DeleteResult
         result = self._impl.find_one_and_delete(
-            filter=filter
+            filter
         )
 
         if not result.acknowledged:
@@ -75,7 +78,7 @@ class Driver:
 
         result.raw_result["_id"] = str(result.raw_result["_id"])
 
-        return src.database.account.model.Account.from_mongo_dict(d=result.raw_result)
+        return src.database.account.model.Account.from_mongo_dict(result.raw_result)
 
     def insert_one(
             self,
@@ -92,7 +95,7 @@ class Driver:
         del document["_id"]
 
         result: pymongo.results.InsertOneResult
-        result = self._impl.insert_one(document=document)
+        result = self._impl.insert_one(document)
 
         if not result.acknowledged:
             return None
@@ -117,14 +120,14 @@ class Driver:
         update: typing.MutableMapping
         update = {
             operator: src.database.account.update.aggregate(
-                value=model,
-                updaters=updaters
+                model,
+                updaters
             ) for operator, updaters in updaters.items()
         }
 
         return self.find_one_and_update(
-            filter=src.database.account.filter.identifier(
-                value=model
+            src.database.account.filter.identifier(
+                model
             ),
-            update=update
+            update
         )

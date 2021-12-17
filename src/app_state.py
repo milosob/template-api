@@ -14,8 +14,8 @@ class AppState:
     ):
         self.config = config
         self.database = src.app_database.AppDatabase(
-            config=config["database"]
+            config["database"]
         )
         self.service = src.app_service.AppService(
-            config=config["service"]
+            config["service"]
         )

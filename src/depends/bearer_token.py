@@ -22,16 +22,16 @@ class BearerToken:
 
         if not authorization:
             raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.UNAUTHORIZED_HEADER_MISSING
+                fastapi.status.HTTP_401_UNAUTHORIZED,
+                src.error.error_type.UNAUTHORIZED_HEADER_MISSING
             )
 
         scheme, _, parameter = authorization.partition(" ")
 
         if scheme.lower() != "bearer":
             raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=src.error.error_type.UNAUTHORIZED_HEADER_SCHEME
+                fastapi.status.HTTP_401_UNAUTHORIZED,
+                src.error.error_type.UNAUTHORIZED_HEADER_SCHEME
             )
 
         return parameter

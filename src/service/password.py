@@ -18,7 +18,7 @@ class ServicePassword:
             salt_size=16,
             digest_size=32
         ).hash(
-            secret=password
+            password
         )
 
     @staticmethod
@@ -27,6 +27,6 @@ class ServicePassword:
             password_hash: str
     ) -> bool:
         return passlib.hash.argon2.verify(
-            secret=password,
-            hash=password_hash
+            password,
+            password_hash
         )

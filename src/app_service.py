@@ -19,17 +19,17 @@ class AppService:
     ) -> None:
         self.config = config
         self.mail = src.service.mail.ServiceMail(
-            config=config["mail"]
+            config["mail"]
         )
         self.jwt = src.service.jwt.ServiceJwt(
-            config=config["jwt"]
+            config["jwt"]
         )
         self.locale = src.service.locale.ServiceLocale(
-            config=config["locale"]
+            config["locale"]
         )
         self.password = src.service.password.ServicePassword(
-            config=config["password"]
+            config["password"]
         )
         self.template = src.service.template.ServiceTemplate(
-            config=config["template"]
+            config["template"]
         )

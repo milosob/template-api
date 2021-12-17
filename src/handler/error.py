@@ -12,10 +12,11 @@ async def handler(
         exc: error_type,
 ):
     return fastapi.responses.Response(
-        status_code=exc.code,
-        media_type="application/json",
-        content=src.dto.error.ErrorApiOut(
+        src.dto.error.ErrorApiOut.construct(
             code=exc.code,
             type=exc.type
-        ).json()
+        ).json(),
+        exc.code,
+        None,
+        "application/json"
     )

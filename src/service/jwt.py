@@ -113,11 +113,11 @@ class ServiceJwt:
 
         token: str
         token = jose.jwt.encode(
-            claims=payload,
-            key=self.issue_key,
-            algorithm=self.issue_alg,
-            headers=None,
-            access_token=access_token
+            payload,
+            self.issue_key,
+            self.issue_alg,
+            None,
+            access_token
         )
 
         return token
@@ -131,15 +131,15 @@ class ServiceJwt:
         try:
             # noinspection PyTypeChecker
             return jose.jwt.decode(
-                token=token,
-                key=self.verify_keys,
-                algorithms=self.verify_algs,
+                token,
+                self.verify_keys,
+                self.verify_algs,
                 **verify_token_kwargs
             )
         except jose.JWTError:
             raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=error_type
+                fastapi.status.HTTP_401_UNAUTHORIZED,
+                error_type
             )
 
     def verify_iss(
@@ -149,8 +149,8 @@ class ServiceJwt:
     ) -> None:
         if payload["iss"] not in self.verify_ids:
             raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=error_type
+                fastapi.status.HTTP_401_UNAUTHORIZED,
+                error_type
             )
 
     def verify_exp(
@@ -161,8 +161,8 @@ class ServiceJwt:
     ) -> None:
         if calendar.timegm(date_now.utctimetuple()) > payload["exp"]:
             raise src.error.error.Error(
-                code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                type=error_type
+                fastapi.status.HTTP_401_UNAUTHORIZED,
+                error_type
             )
 
     def verify_required_scopes(
@@ -178,8 +178,8 @@ class ServiceJwt:
         for scope in required_scopes:
             if scope not in scopes:
                 raise src.error.error.Error(
-                    code=fastapi.status.HTTP_401_UNAUTHORIZED,
-                    type=error_type
+                    fastapi.status.HTTP_401_UNAUTHORIZED,
+                    error_type
                 )
 
     def verify(
@@ -194,28 +194,28 @@ class ServiceJwt:
     ) -> dict:
         payload: dict
         payload = self.verify_token(
-            token=token,
-            error_type=verify_token_error_type,
+            token,
+            verify_token_error_type,
             **verify_token_kwargs
         )
 
         if verify_iss_error_type:
             self.verify_iss(
-                payload=payload,
-                error_type=verify_iss_error_type
+                payload,
+                verify_iss_error_type
             )
 
         if verify_exp_error_type:
             self.verify_exp(
-                payload=payload,
-                error_type=verify_exp_error_type
+                payload,
+                verify_exp_error_type
             )
 
         if verify_scopes_error_type:
             self.verify_required_scopes(
-                payload=payload,
-                error_type=verify_scopes_error_type,
-                required_scopes=required_scopes
+                payload,
+                verify_scopes_error_type,
+                required_scopes
             )
 
         return payload

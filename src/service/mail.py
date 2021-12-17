@@ -85,13 +85,12 @@ class ServiceMail:
             self,
             message: email.message.EmailMessage
     ) -> None:
-        await self.send_cb(
-            message=message
-        )
+        await self.send_cb(message)
 
     async def send_template(
             self,
             to: dict = None,
+            cc: dict = None,
             bcc: dict = None,
             locale: str = None,
             template: typing.Tuple[jinja2.Template, jinja2.Template] = None,
@@ -135,6 +134,18 @@ class ServiceMail:
                 ]
             )
 
+        if cc:
+            email_message["Cc"] = ", ".join(
+                [
+                    email.utils.formataddr(
+                        (
+                            name,
+                            address
+                        )
+                    ) for address, name in cc.items()
+                ]
+            )
+
         if bcc:
             email_message["Bcc"] = ", ".join(
                 [
@@ -147,6 +158,4 @@ class ServiceMail:
                 ]
             )
 
-        await self.send(
-            message=email_message
-        )
+        await self.send(email_message)

@@ -20,8 +20,10 @@ class AppDatabase:
         self.account_client = pymongo.MongoClient(
             self.account_config["uri"]
         )
-        self.account = self.account_client.get_database(
-            name=self.account_config["name"]
-        ).get_collection(
-            name=self.account_config["collection"]
+        self.account = src.database.account.driver.Driver(
+            self.account_client.get_database(
+                self.account_config["name"]
+            ).get_collection(
+                self.account_config["collection"]
+            )
         )
