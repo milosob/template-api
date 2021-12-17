@@ -270,8 +270,8 @@ async def account_post_authenticate(
     )
 
     return src.dto.account.AccountPostAuthenticateOut(
-        access_token,
-        refresh_token
+        access_token=access_token,
+        refresh_token=refresh_token
     )
 
 
