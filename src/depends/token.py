@@ -6,29 +6,34 @@ import src.error.error
 import src.error.error_type
 
 
-class BearerToken:
+class Token:
+    header: str
+    scheme: str
 
     def __init__(
-            self
+            self,
+            header: str,
+            scheme: str
     ) -> None:
-        pass
+        self.header = header.lower()
+        self.scheme = scheme.lower()
 
     def __call__(
             self,
             request: fastapi.Request
     ) -> str:
-        authorization: str
-        authorization = request.headers.get("authorization")
+        header: str
+        header = request.headers.get(self.header)
 
-        if not authorization:
+        if not header:
             raise src.error.error.Error(
                 fastapi.status.HTTP_401_UNAUTHORIZED,
                 src.error.error_type.UNAUTHORIZED_HEADER_MISSING
             )
 
-        scheme, _, parameter = authorization.partition(" ")
+        scheme, _, parameter = header.partition(" ")
 
-        if scheme.lower() != "bearer":
+        if scheme.lower() != self.scheme:
             raise src.error.error.Error(
                 fastapi.status.HTTP_401_UNAUTHORIZED,
                 src.error.error_type.UNAUTHORIZED_HEADER_SCHEME
@@ -37,7 +42,10 @@ class BearerToken:
         return parameter
 
 
-def depends() -> typing.Any:
+def depends(
+        header: typing.Optional[str] = "authorization",
+        scheme: typing.Optional[str] = "bearer"
+) -> typing.Any:
     return fastapi.Depends(
-        BearerToken()
+        Token(header, scheme)
     )

@@ -7,7 +7,7 @@ import src.app_state
 import src.database.me.filter
 import src.database.me.update
 import src.database.me.model
-import src.depends.bearer_token
+import src.depends.jwt.access
 import src.depends.app_state
 import src.dto.error
 import src.dto.me
@@ -57,7 +57,7 @@ error_responses: dict = {
 async def me_get(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        me_get_in: src.dto.me.MeGetIn = fastapi.Depends()
+        model: src.dto.me.MeGetIn = fastapi.Depends()
 ):
     pass
 
@@ -68,7 +68,7 @@ async def me_get(
     status_code=fastapi.status.HTTP_201_CREATED,
     responses=error_responses | {
         fastapi.status.HTTP_201_CREATED: {
-            "model": src.dto.me.MePutIn,
+            "model": src.dto.me.MePutOut,
             "description": "Resource modified."
         },
     }
@@ -76,7 +76,7 @@ async def me_get(
 async def me_put(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        me_put_in: src.dto.me.MePutIn = fastapi.Depends()
+        model: src.dto.me.MePutIn = fastapi.Body(...)
 ):
     pass
 
@@ -87,7 +87,7 @@ async def me_put(
     status_code=fastapi.status.HTTP_201_CREATED,
     responses=error_responses | {
         fastapi.status.HTTP_201_CREATED: {
-            "model": src.dto.me.MePostIn,
+            "model": src.dto.me.MePostOut,
             "description": "Resource created."
         },
     }
@@ -95,6 +95,6 @@ async def me_put(
 async def me_post(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        me_post_in: src.dto.me.MePostIn = fastapi.Depends()
+        model: src.dto.me.MePostIn = fastapi.Body(...)
 ):
     pass

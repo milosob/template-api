@@ -9,7 +9,7 @@ import src.dto.jwt
 import src.error
 
 
-class PasswordRecover:
+class Register:
     scopes: typing.List[str]
 
     def __init__(
@@ -24,14 +24,14 @@ class PasswordRecover:
             app_state: src.app_state.AppState = src.depends.app_state.depends(),
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
-        jwt.load_password_recover(
+        jwt.load_register(
             app_state.service.jwt.verify(
                 bearer_token,
-                ["type:account-password-recover"] + self.scopes,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
+                ["type:register"] + self.scopes,
+                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
+                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
+                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
+                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES,
                 app_state.service.jwt.verify_default_options,
             )
         )
@@ -42,5 +42,5 @@ def depends(
         scopes: typing.Optional[typing.List[str]] = None
 ) -> typing.Any:
     return fastapi.Depends(
-        PasswordRecover(scopes if scopes else [])
+        Register(scopes if scopes else [])
     )

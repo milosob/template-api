@@ -3,6 +3,11 @@ import datetime
 import hmac
 import os
 import typing
+import fastapi
+
+import src.database.account.model
+import src.error.error_type
+import src.error
 
 
 class JwtUserEmail:
@@ -15,7 +20,7 @@ class JwtUserEmail:
             value: typing.Optional[str] = None,
             primary: typing.Optional[bool] = False,
             confirmed: typing.Optional[bool] = False
-    ):
+    ) -> None:
         self.value = value
         self.primary = primary
         self.confirmed = confirmed
@@ -34,11 +39,21 @@ class JwtUserEmail:
             d: dict,
             revision: int
     ):
-        i = JwtUserEmail()
-        i.value = d["v"]
-        i.primary = d["p"] == 1
-        i.confirmed = d["c"] == 1
-        return i
+        return JwtUserEmail(
+            d["v"],
+            d["p"] == 1,
+            d["c"] == 1
+        )
+
+    @staticmethod
+    def from_account(
+            model: src.database.account.model.AccountEmail
+    ):
+        return JwtUserEmail(
+            model.value,
+            model.primary,
+            model.confirmed
+        )
 
 
 class JwtUserVerification:
@@ -62,9 +77,17 @@ class JwtUserVerification:
             d: dict,
             revision: int
     ):
-        i = JwtUserVerification()
-        i.email = d["e"] == 1
-        return i
+        return JwtUserVerification(
+            d["e"] == 1
+        )
+
+    @staticmethod
+    def from_account(
+            model: src.database.account.model.AccountVerification
+    ):
+        return JwtUserVerification(
+            model.email
+        )
 
 
 class JwtUser:
@@ -81,7 +104,7 @@ class JwtUser:
             identifier: typing.Optional[str] = None,
             created_at: typing.Optional[datetime.datetime] = None,
             updated_at: typing.Optional[datetime.datetime] = None,
-            emails=None,
+            emails: typing.Optional[typing.List[JwtUserEmail]] = None,
             verification: typing.Optional[JwtUserVerification] = None
     ) -> None:
         if emails is None:
@@ -107,19 +130,61 @@ class JwtUser:
             "em": [
                 email.to_json_dict()
                 for email in self.emails
-            ]
+            ],
+            "vr": self.verification.to_json_dict()
         }
 
     @staticmethod
     def from_json_dict(
             d: dict
     ):
-        i = JwtUser()
-        i.revision = d["r"]
-        i.identifier = d["i"]
-        i.created_at = datetime.datetime.utcfromtimestamp(d["c"])
-        i.updated_at = datetime.datetime.utcfromtimestamp(d["u"])
-        i.emails = [JwtUserEmail.from_json_dict(email, i.revision) for email in d["em"]]
+        revision = d["r"]
+        i = JwtUser(
+            d["i"],
+            datetime.datetime.utcfromtimestamp(d["c"]),
+            datetime.datetime.utcfromtimestamp(d["u"]),
+            [JwtUserEmail.from_json_dict(email, revision) for email in d["em"]],
+            JwtUserVerification.from_json_dict(d["vr"], revision)
+        )
+        i.revision = revision
+        return i
+
+    @staticmethod
+    def from_account(
+            model: src.database.account.model.Account
+    ):
+        return JwtUser(
+            model.identifier,
+            model.created_at,
+            model.updated_at,
+            [JwtUserEmail.from_account(email) for email in model.emails],
+            JwtUserVerification.from_account(model.verification)
+        )
+
+
+# TOP
+class JwtRegister:
+    revision: int = 1
+
+    def __init__(
+            self
+    ) -> None:
+        pass
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "r": self.revision
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict
+    ):
+        revision = d["r"]
+        i = JwtRegister()
+        i.revision = revision
         return i
 
 
@@ -136,7 +201,7 @@ class JwtPasswordRecover:
             identifier: typing.Optional[str] = None,
             message: typing.Optional[bytes] = None,
             signature: typing.Optional[bytes] = None
-    ):
+    ) -> None:
         if not message:
             message = os.urandom(16)
 
@@ -158,11 +223,13 @@ class JwtPasswordRecover:
     def from_json_dict(
             d: dict
     ):
-        i = JwtPasswordRecover()
-        i.revision = d["r"]
-        i.identifier = d["i"]
-        i.message = base64.b64decode(d["m"])
-        i.signature = base64.b64decode(d["s"])
+        revision = d["r"]
+        i = JwtPasswordRecover(
+            d["i"],
+            base64.b64decode(d["m"]),
+            base64.b64decode(d["s"])
+        )
+        i.revision = revision
         return i
 
     def sign(
@@ -215,9 +282,11 @@ class JwtAccess:
     def from_json_dict(
             d: dict
     ):
-        i = JwtAccess()
-        i.revision = d["r"]
-        i.user = JwtUser.from_json_dict(d["u"])
+        revision = d["r"]
+        i = JwtAccess(
+            JwtUser.from_json_dict(d["u"])
+        )
+        i.revision = revision
         return i
 
 
@@ -230,7 +299,7 @@ class JwtRefresh:
     def __init__(
             self,
             counter: typing.Optional[int] = 0
-    ):
+    ) -> None:
         self.counter = counter
 
     def to_json_dict(
@@ -245,7 +314,75 @@ class JwtRefresh:
     def from_json_dict(
             d: dict
     ):
-        i = JwtRefresh()
-        i.revision = d["r"]
-        i.counter = d["c"]
+        revision = d["r"]
+        i = JwtRefresh(
+            d["c"]
+        )
+        i.revision = revision
         return i
+
+
+class Jwt:
+    sub: str
+
+    register: JwtRegister
+    register_scopes: typing.List[str]
+
+    access: JwtAccess
+    access_scopes: typing.List[str]
+
+    refresh: JwtRefresh
+    refresh_scopes: typing.List[str]
+
+    password_recover: JwtPasswordRecover
+    password_recover_scopes: typing.List[str]
+
+    def __init__(
+            self
+    ) -> None:
+        pass
+
+    def load_sub(
+            self,
+            payload: dict
+    ) -> None:
+        try:
+            if self.sub != payload["sub"]:
+                raise src.error.error.Error(
+                    fastapi.status.HTTP_401_UNAUTHORIZED,
+                    src.error.error_type.UNAUTHORIZED_HEADER_SUB_CONFLICT
+                )
+        except AttributeError:
+            self.sub = payload["sub"]
+
+    def load_register(
+            self,
+            payload: dict
+    ) -> None:
+        self.load_sub(payload)
+        self.register = JwtRegister.from_json_dict(payload["data"])
+        self.register_scopes = payload["scopes"]
+
+    def load_access(
+            self,
+            payload: dict
+    ) -> None:
+        self.load_sub(payload)
+        self.access = JwtAccess.from_json_dict(payload["data"])
+        self.access_scopes = payload["scopes"]
+
+    def load_refresh(
+            self,
+            payload: dict
+    ) -> None:
+        self.load_sub(payload)
+        self.refresh = JwtRefresh.from_json_dict(payload["data"])
+        self.refresh_scopes = payload["scopes"]
+
+    def load_password_recover(
+            self,
+            payload: dict
+    ) -> None:
+        self.load_sub(payload)
+        self.password_recover = JwtPasswordRecover.from_json_dict(payload["data"])
+        self.password_recover_scopes = payload["scopes"]

@@ -9,6 +9,7 @@ SERVICE_UNAVAILABLE_MAIL_ACCOUNT_PASSWORD_RECOVER = "service-unavailable-mail-ac
 # UNAUTHORIZED
 UNAUTHORIZED_HEADER_MISSING = "unauthorized-header-missing"
 UNAUTHORIZED_HEADER_SCHEME = "unauthorized-header-scheme"
+UNAUTHORIZED_HEADER_SUB_CONFLICT = "unauthorized-header-sub-conflict"
 
 UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID = "unauthorized-account-register-confirm-token-invalid"
 UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER = "unauthorized-account-register-confirm-token-issuer"

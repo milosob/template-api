@@ -1,6 +1,4 @@
 import asyncio
-import hmac
-import os
 
 import fastapi
 import fastapi.security
@@ -10,8 +8,9 @@ import src.database.account.filter
 import src.database.account.update
 import src.database.account.model
 import src.depends.app_state
-import src.depends.bearer_token
 import src.depends.jwt.password_recover
+import src.depends.jwt.refresh
+import src.depends.jwt.register
 import src.dto.account
 import src.dto.error
 import src.dto.jwt
@@ -57,14 +56,12 @@ error_responses: dict = {
 async def account_post_register(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_post_register_in: src.dto.account.AccountPostRegisterIn = fastapi.Body(
-            ...
-        )
+        dto: src.dto.account.AccountPostRegisterIn = fastapi.Body(...)
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.emails(
-            [account_post_register_in.username]
+            [dto.username]
         )
     )
 
@@ -78,7 +75,7 @@ async def account_post_register(
 
     account_email: src.database.account.model.AccountEmail
     account_email = src.database.account.model.AccountEmail()
-    account_email.value = account_post_register_in.username
+    account_email.value = dto.username
     account_email.primary = True
     account_email.confirmed = False
 
@@ -87,7 +84,7 @@ async def account_post_register(
     )
 
     account.authentication.passwords.primary.value = app_state.service.password.password_hash(
-        account_post_register_in.password
+        dto.password
     )
 
     account_inserted: src.database.account.model.Account
@@ -103,17 +100,12 @@ async def account_post_register(
 
     account = account_inserted
 
-    sub: str
-    sub = account.identifier
-    data: dict
-    data = {}
-
     account_register_token: str
     account_register_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        account.identifier,
+        src.dto.jwt.JwtRegister().to_json_dict(),
         app_state.service.jwt.lifetime_account_register,
-        ["type:account-register-confirm"]
+        ["type:register"]
     )
 
     try:
@@ -132,7 +124,7 @@ async def account_post_register(
         )
 
     return src.dto.account.AccountPostRegisterOut(
-        username=account_post_register_in.username,
+        username=dto.username,
         password=None
     )
 
@@ -149,31 +141,14 @@ async def account_post_register(
     }
 )
 async def account_post_register_confirm(
-        request: fastapi.Request,
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.register.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_register_confirm_token: str = src.depends.bearer_token.depends(),
-        account_register_confirm_in: src.dto.account.AccountPostRegisterConfirmIn = fastapi.Body(
-            ...
-        )
+        dto: src.dto.account.AccountPostRegisterConfirmIn = fastapi.Body(...)
 ):
-    payload: dict
-    payload = app_state.service.jwt.verify(
-        account_register_confirm_token,
-        ["type:account-register-confirm"],
-        src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
-        src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
-        src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
-        src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES,
-        app_state.service.jwt.verify_default_options,
-    )
-
-    sub: str
-    sub = payload["sub"]
-
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            sub
+            jwt.sub
         )
     )
 
@@ -222,16 +197,13 @@ async def account_post_register_confirm(
     }
 )
 async def account_post_authenticate(
-        request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_post_authenticate_in: src.dto.account.AccountPostAuthenticateIn = fastapi.Body(
-            ...
-        )
+        dto: src.dto.account.AccountPostAuthenticateIn = fastapi.Body(...)
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.emails(
-            [account_post_authenticate_in.username]
+            [dto.username]
         )
     )
 
@@ -242,7 +214,7 @@ async def account_post_authenticate(
         )
 
     if not app_state.service.password.password_verify(
-            account_post_authenticate_in.password,
+            dto.password,
             account.authentication.passwords.primary.value
     ):
         raise src.error.error.Error(
@@ -250,22 +222,22 @@ async def account_post_authenticate(
             src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
         )
 
-    sub: str
-    sub = account.identifier
-    data: dict
-    data = {}
-
     access_token: str
     access_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        account.identifier,
+        src.dto.jwt.JwtAccess(
+            src.dto.jwt.JwtUser.from_account(account)
+        ).to_json_dict(),
         app_state.service.jwt.lifetime_access,
         ["type:access"]
     )
+
     refresh_token: str
     refresh_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        account.identifier,
+        src.dto.jwt.JwtRefresh(
+            0
+        ).to_json_dict(),
         app_state.service.jwt.lifetime_refresh,
         ["type:refresh"],
         access_token
@@ -289,56 +261,24 @@ async def account_post_authenticate(
     }
 )
 async def account_post_authenticate_refresh(
-        request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_post_authenticate_refresh_in: src.dto.account.AccountPostAuthenticateRefreshIn = fastapi.Body(
-            ...
-        )
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.refresh.depends()
 ):
-    access_token_payload: dict
-    access_token_payload = app_state.service.jwt.verify(
-        account_post_authenticate_refresh_in.access_token,
-        ["type:access"],
-        src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
-        src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
-        None,
-        src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_SCOPES,
-        app_state.service.jwt.verify_default_options
-    )
-
-    refresh_token_payload: dict
-    refresh_token_payload = app_state.service.jwt.verify(
-        account_post_authenticate_refresh_in.refresh_token,
-        ["type:refresh"],
-        src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
-        src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
-        src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,
-        src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_SCOPES,
-        app_state.service.jwt.verify_refresh_options,
-        account_post_authenticate_refresh_in.access_token
-    )
-
-    sub: str
-    sub = refresh_token_payload["sub"]
-    data: dict
-    data = refresh_token_payload["data"]
-
-    # TODO
-    #  After token verification update token data based on current db state.
+    jwt.refresh.counter += 1
 
     access_token: str
     access_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        jwt.sub,
+        jwt.access.to_json_dict(),
         app_state.service.jwt.lifetime_access,
-        access_token_payload["scopes"]
+        jwt.access_scopes
     )
     refresh_token: str
     refresh_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        jwt.sub,
+        jwt.refresh.to_json_dict(),
         app_state.service.jwt.lifetime_refresh,
-        ["type:refresh"],
+        jwt.refresh_scopes,
         access_token
     )
 
@@ -362,14 +302,12 @@ async def account_post_authenticate_refresh(
 async def account_post_password_forget(
         request: fastapi.Request,
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_post_password_forget_in: src.dto.account.AccountPostPasswordForgetIn = fastapi.Body(
-            ...
-        )
+        dto: src.dto.account.AccountPostPasswordForgetIn = fastapi.Body(...)
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.emails(
-            [account_post_password_forget_in.username]
+            [dto.username]
         )
     )
 
@@ -427,16 +365,14 @@ async def account_post_password_forget(
     }
 )
 async def account_post_password_recover(
-        jwt_password_recover: src.dto.jwt.JwtPasswordRecover = src.depends.jwt.password_recover.depends(
-            ["type:account-password-recover"]
-        ),
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.password_recover.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        account_post_password_recover_in: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(...)
+        dto: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(...)
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            jwt_password_recover.identifier
+            jwt.password_recover.identifier
         )
     )
 
@@ -449,7 +385,7 @@ async def account_post_password_recover(
     old_password: str
     old_password = account.authentication.passwords.primary.value
 
-    if not jwt_password_recover.verify(
+    if not jwt.password_recover.verify(
             old_password
     ):
         raise src.error.error.Error(
@@ -458,14 +394,9 @@ async def account_post_password_recover(
         )
 
     new_password: str
-
-    while True:
-        new_password = app_state.service.password.password_hash(
-            account_post_password_recover_in.password
-        )
-
-        if not hmac.compare_digest(old_password, new_password):
-            break
+    new_password = app_state.service.password.password_hash(
+        dto.password
+    )
 
     account.authentication.passwords.primary.value = new_password
 
