@@ -126,7 +126,8 @@ class ServiceJwt:
             self,
             token: str,
             error_type: str,
-            **verify_token_kwargs
+            options: dict,
+            access_token: str
     ):
         try:
             # noinspection PyTypeChecker
@@ -134,7 +135,11 @@ class ServiceJwt:
                 token,
                 self.verify_keys,
                 self.verify_algs,
-                **verify_token_kwargs
+                options,
+                None,
+                None,
+                None,
+                access_token
             )
         except jose.JWTError:
             raise src.error.error.Error(
@@ -186,17 +191,19 @@ class ServiceJwt:
             self,
             token: str,
             required_scopes: typing.List[str],
-            verify_token_error_type: typing.Union[str, None],
-            verify_iss_error_type: typing.Union[str, None],
-            verify_exp_error_type: typing.Union[str, None],
-            verify_scopes_error_type: typing.Union[str, None],
-            **verify_token_kwargs
+            verify_token_error_type: typing.Optional[str] = None,
+            verify_iss_error_type: typing.Optional[str] = None,
+            verify_exp_error_type: typing.Optional[str] = None,
+            verify_scopes_error_type: typing.Optional[str] = None,
+            options: typing.Optional[dict] = None,
+            access_token: typing.Optional[str] = None
     ) -> dict:
         payload: dict
         payload = self.verify_token(
             token,
             verify_token_error_type,
-            **verify_token_kwargs
+            options,
+            access_token
         )
 
         if verify_iss_error_type:

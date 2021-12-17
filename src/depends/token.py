@@ -8,7 +8,7 @@ import src.error.error_type
 
 
 def depends(
-        header: typing.Optional[str] = "authorization",
+        header: typing.Optional[str] = "authorization-dev",
         scheme: typing.Optional[str] = "bearer"
 ) -> str:
     def dependency(

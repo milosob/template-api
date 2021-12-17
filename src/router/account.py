@@ -332,7 +332,7 @@ async def account_post_password_forget(
         account.identifier,
         jwt_password_recover.to_json_dict(),
         app_state.service.jwt.lifetime_password_recover,
-        ["type:account-password-recover"]
+        ["type:recover"]
     )
 
     try:

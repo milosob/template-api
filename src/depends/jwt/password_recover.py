@@ -21,12 +21,12 @@ def depends(
         jwt.load_password_recover(
             app_state.service.jwt.verify(
                 token,
-                ["type:account-password-recover"] + scopes,
+                ["type:recover"] + scopes,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
-                app_state.service.jwt.verify_default_options,
+                app_state.service.jwt.verify_default_options
             )
         )
         return jwt

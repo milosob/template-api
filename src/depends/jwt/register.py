@@ -26,7 +26,7 @@ def depends(
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES,
-                app_state.service.jwt.verify_default_options,
+                app_state.service.jwt.verify_default_options
             )
         )
         return jwt
