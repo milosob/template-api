@@ -61,8 +61,8 @@ async def account_post_register(
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
-        filter=src.database.account.filter.email(
-            value=account_post_register_in.username
+        filter=src.database.account.filter.emails(
+            value=[account_post_register_in.username]
         )
     )
 
@@ -87,8 +87,6 @@ async def account_post_register(
     account.authentication.passwords.primary.value = app_state.service.password.password_hash(
         password=account_post_register_in.password
     )
-
-    account.notify_create()
 
     account_inserted: src.database.account.model.Account
     account_inserted = app_state.database.account.insert_one(
@@ -180,30 +178,23 @@ async def account_post_register_confirm(
 
     account.verification.email = True
 
-    account_email: src.database.account.model.AccountEmail
-    account_email = next((email for email in account.emails if email.primary), None)
+    account_email_primary: src.database.account.model.AccountEmail
+    account_email_primary = next((email for email in account.emails if email.primary), None)
 
-    if not account_email:
+    if not account_email_primary:
         raise src.error.error.Error(
             code=fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
             type=src.error.error_type.INTERNAL_SERVER_ERROR
         )
 
-    account_email.confirmed = True
-
-    account.notify_update()
+    account_email_primary.confirmed = True
 
     if not app_state.database.account.update_one(
-            filter=src.database.account.filter.identifier(
-                value=sub
-            ),
-            update={
-                "$set": src.database.account.update.verification(
-                    value=account
-                ) | src.database.account.update.emails(
-                    value=account
-                ) | src.database.account.update.updated_at(
-                    value=account
+            model=account,
+            updaters={
+                "$set": (
+                        src.database.account.update.verification,
+                        src.database.account.update.emails
                 )
             }
     ):
@@ -235,8 +226,8 @@ async def account_post_authenticate(
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
-        filter=src.database.account.filter.email(
-            value=account_post_authenticate_in.username
+        filter=src.database.account.filter.emails(
+            value=[account_post_authenticate_in.username]
         )
     )
 
@@ -373,8 +364,8 @@ async def account_post_password_forget(
 ):
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
-        filter=src.database.account.filter.email(
-            value=account_post_password_forget_in.username
+        filter=src.database.account.filter.emails(
+            value=[account_post_password_forget_in.username]
         )
     )
 
@@ -523,14 +514,12 @@ async def account_post_password_recover(
     account.authentication.passwords.primary.value = new_password_hash
 
     if not app_state.database.account.update_one(
-            filter=src.database.account.filter.identifier(
-                value=account.identifier
-            ),
-            update=src.database.account.update.authentication_passwords_primary(
-                value=account
-            ) | src.database.account.update.updated_at(
-                value=account
-            )
+            model=account,
+            updaters={
+                "$set": {
+                    src.database.account.update.authentication_passwords_primary,
+                }
+            }
     ):
         raise src.error.error.Error(
             code=fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,

@@ -137,19 +137,6 @@ class Account:
     ) -> typing.Union[datetime.datetime, None]:
         return self._uat
 
-    def notify_create(
-            self,
-            date: datetime.datetime = datetime.datetime.utcnow()
-    ) -> None:
-        self._cat = date
-        self._uat = date
-
-    def notify_update(
-            self,
-            date: datetime.datetime = datetime.datetime.utcnow()
-    ) -> None:
-        self._uat = date
-
     def to_mongo_dict(
             self
     ) -> dict:

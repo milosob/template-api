@@ -2,30 +2,36 @@ import typing
 
 import bson.objectid
 
-
-def email(
-        value: str
-) -> dict:
-    return {
-        "emails.value": {
-            "$eq": value
-        }
-    }
+import src.database.account.model
 
 
 def emails(
-        value: typing.List[str]
-) -> dict:
+        value: typing.Union[
+            src.database.account.model.Account,
+            typing.Set[str]
+        ]
+) -> typing.MutableMapping:
     return {
         "emails.value": {
-            "$in": value
+            "$in": [email.value for email in value.emails] if isinstance(
+                value,
+                src.database.account.model.Account
+            ) else list(value)
         }
     }
 
 
 def identifier(
-        value: str
-) -> dict:
+        value: typing.Union[
+            src.database.account.model.Account,
+            str
+        ]
+) -> typing.MutableMapping:
     return {
-        "_id": bson.objectid.ObjectId(value)
+        "_id": bson.objectid.ObjectId(
+            value.identifier if isinstance(
+                value,
+                src.database.account.model.Account
+            ) else value
+        )
     }

@@ -1,7 +1,20 @@
+import collections
 import datetime
 import typing
 
 import src.database.account.model
+
+
+def aggregate(
+        value: src.database.account.model.Account,
+        updaters: typing.Set[
+            typing.Callable[
+                [typing.Union[src.database.account.model.Account, typing.Any]],
+                typing.MutableMapping
+            ]
+        ]
+) -> typing.MutableMapping:
+    return collections.ChainMap(*[updater(value) for updater in updaters])
 
 
 def updated_at(
@@ -9,7 +22,7 @@ def updated_at(
             src.database.account.model.Account,
             datetime.datetime
         ]
-) -> dict:
+) -> typing.MutableMapping:
     return {
         "_uat": value.updated_at if isinstance(
             value,
@@ -23,7 +36,7 @@ def emails(
             src.database.account.model.Account,
             typing.List[src.database.account.model.AccountEmail]
         ]
-) -> dict:
+) -> typing.MutableMapping:
     return {
         "emails": [x.to_mongo_dict() for x in (value.emails if isinstance(
             value,
@@ -37,7 +50,7 @@ def verification(
             src.database.account.model.Account,
             src.database.account.model.AccountVerification
         ]
-) -> dict:
+) -> typing.MutableMapping:
     return {
         "verification": (value.verification if isinstance(
             value,
@@ -51,7 +64,7 @@ def verification_email(
             src.database.account.model.Account,
             bool
         ]
-) -> dict:
+) -> typing.MutableMapping:
     return {
         "verification.email": value.verification.email if isinstance(
             value,
@@ -65,7 +78,7 @@ def authentication_passwords_primary(
             src.database.account.model.Account,
             src.database.account.model.AccountAuthenticationPassword
         ]
-):
+) -> typing.MutableMapping:
     return {
         "authentication.password.primary": (value.authentication.passwords.primary if isinstance(
             value,
