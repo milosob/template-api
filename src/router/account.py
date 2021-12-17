@@ -13,6 +13,7 @@ import src.depends.bearer_token
 import src.depends.app_state
 import src.dto.account
 import src.dto.error
+import src.dto.jwt
 import src.error.error
 import src.error.error_type
 
@@ -375,30 +376,22 @@ async def account_post_password_forget(
         await asyncio.sleep(2)
         return src.dto.account.AccountPostPasswordForgetOut()
 
-    old_password_hash: str
-    old_password_hash = account.authentication.passwords.primary.value
+    old_password: str
+    old_password = account.authentication.passwords.primary.value
 
-    nonce_bytes: bytes
-    nonce_bytes = os.urandom(16)
-    signature_bytes: bytes
-    signature_bytes = hmac.digest(
-        old_password_hash.encode("utf-8"),
-        nonce_bytes,
-        "sha256"
+    jwt_password_recover: src.dto.jwt.JwtPasswordRecover
+    jwt_password_recover = src.dto.jwt.JwtPasswordRecover(
+        account.identifier
     )
 
-    sub: str
-    sub = account.identifier
-    data: dict
-    data = {
-        "nonce": nonce_bytes.hex(),
-        "signature": signature_bytes.hex()
-    }
+    jwt_password_recover.sign(
+        old_password
+    )
 
     password_recover_token: str
     password_recover_token = app_state.service.jwt.issue(
-        sub,
-        data,
+        account.identifier,
+        jwt_password_recover.to_json_dict(),
         app_state.service.jwt.lifetime_password_recover,
         ["type:account-password-recover"]
     )
@@ -451,33 +444,13 @@ async def account_post_password_recover(
         app_state.service.jwt.verify_default_options,
     )
 
-    data: dict
-    data = payload["data"]
-
-    nonce_str: str
-    nonce_str = data.get("nonce", "")
-
-    signature_str: str
-    signature_str = data.get("signature", "")
-
-    if not nonce_str or not signature_str:
-        raise src.error.error.Error(
-            fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID
-        )
-
-    nonce_bytes: bytes
-    nonce_bytes = bytes.fromhex(nonce_str)
-    signature_bytes: bytes
-    signature_bytes = bytes.fromhex(signature_str)
-
-    sub: str
-    sub = payload["sub"]
+    jwt_password_recover: src.dto.jwt.JwtPasswordRecover
+    jwt_password_recover = src.dto.jwt.JwtPasswordRecover.from_json_dict(payload["data"])
 
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            sub
+            jwt_password_recover.identifier
         )
     )
 
@@ -487,33 +460,28 @@ async def account_post_password_recover(
             src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID
         )
 
-    old_password_hash: str
-    old_password_hash = account.authentication.passwords.primary.value
+    old_password: str
+    old_password = account.authentication.passwords.primary.value
 
-    if not hmac.compare_digest(
-            signature_bytes,
-            hmac.digest(
-                old_password_hash.encode("utf-8"),
-                nonce_bytes,
-                "sha256"
-            )
+    if not jwt_password_recover.verify(
+            old_password
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_401_UNAUTHORIZED,
             src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED
         )
 
-    new_password_hash: str
+    new_password: str
 
     while True:
-        new_password_hash = app_state.service.password.password_hash(
+        new_password = app_state.service.password.password_hash(
             account_post_password_recover_in.password
         )
 
-        if not hmac.compare_digest(old_password_hash, new_password_hash):
+        if not hmac.compare_digest(old_password, new_password):
             break
 
-    account.authentication.passwords.primary.value = new_password_hash
+    account.authentication.passwords.primary.value = new_password
 
     if not app_state.database.account.update_one(
             account,
