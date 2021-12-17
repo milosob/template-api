@@ -7,27 +7,21 @@ import src.depends.token
 import src.depends.app_state
 import src.dto.jwt
 import src.error
+import src.error.error_type
 
 
-class Register:
-    scopes: typing.List[str]
-
-    def __init__(
-            self,
-            scopes: typing.List[str]
-    ) -> None:
-        self.scopes = scopes
-
-    def __call__(
-            self,
+def depends(
+        scopes: typing.Optional[typing.List[str]] = []
+) -> src.dto.jwt.Jwt:
+    def dependency(
             token: str = src.depends.token.depends(),
-            app_state: src.app_state.AppState = src.depends.app_state.depends(),
+            app_state: src.app_state.AppState = src.depends.app_state.depends()
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
         jwt.load_register(
             app_state.service.jwt.verify(
                 token,
-                ["type:register"] + self.scopes,
+                ["type:register"] + scopes,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
@@ -37,10 +31,4 @@ class Register:
         )
         return jwt
 
-
-def depends(
-        scopes: typing.Optional[typing.List[str]] = None
-) -> typing.Any:
-    return fastapi.Depends(
-        Register(scopes if scopes else [])
-    )
+    return fastapi.Depends(dependency)

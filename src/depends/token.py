@@ -10,7 +10,7 @@ import src.error.error_type
 def depends(
         header: typing.Optional[str] = "authorization",
         scheme: typing.Optional[str] = "bearer"
-) -> typing.Any:
+) -> str:
     def dependency(
             value: str = src.depends.header.depends(header)
     ) -> str:
@@ -30,6 +30,4 @@ def depends(
 
         return p
 
-    return fastapi.Depends(
-        dependency
-    )
+    return fastapi.Depends(dependency)

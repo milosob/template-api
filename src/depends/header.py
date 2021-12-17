@@ -6,5 +6,5 @@ import fastapi
 def depends(
         header: str,
         default: typing.Any = ...
-) -> typing.Any:
+) -> str:
     return fastapi.Header(default, alias=header)
