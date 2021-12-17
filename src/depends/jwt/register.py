@@ -20,13 +20,13 @@ class Register:
 
     def __call__(
             self,
-            bearer_token: str = src.depends.token.depends(),
+            token: str = src.depends.token.depends(),
             app_state: src.app_state.AppState = src.depends.app_state.depends(),
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
         jwt.load_register(
             app_state.service.jwt.verify(
-                bearer_token,
+                token,
                 ["type:register"] + self.scopes,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,

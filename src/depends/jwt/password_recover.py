@@ -20,13 +20,13 @@ class PasswordRecover:
 
     def __call__(
             self,
-            bearer_token: str = src.depends.token.depends(),
+            token: str = src.depends.token.depends(),
             app_state: src.app_state.AppState = src.depends.app_state.depends(),
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
         jwt.load_password_recover(
             app_state.service.jwt.verify(
-                bearer_token,
+                token,
                 ["type:account-password-recover"] + self.scopes,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
