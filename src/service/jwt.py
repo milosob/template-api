@@ -94,7 +94,7 @@ class ServiceJwt:
             data: dict,
             lifetime: int,
             scopes: typing.List[str],
-            access_token: str = None
+            access_token: typing.Optional[str] = None
     ) -> str:
         date_now: datetime.datetime
         date_now = datetime.datetime.utcnow()

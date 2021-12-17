@@ -279,8 +279,8 @@ class JwtPasswordRecover:
         return {
             "r": self.revision,
             "i": self.identifier,
-            "m": base64.b64encode(self.message),
-            "s": base64.b64encode(self.signature),
+            "m": base64.b64encode(self.message).decode("utf-8"),
+            "s": base64.b64encode(self.signature).decode("utf-8"),
         }
 
     @staticmethod
