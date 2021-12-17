@@ -23,7 +23,7 @@ class Driver:
             self,
             filter: typing.MutableMapping
     ) -> typing.Union[src.database.account.model.Account, None]:
-        result: typing.Any
+        result: dict
         result = self._impl.find_one(
             filter
         )
@@ -33,7 +33,7 @@ class Driver:
 
         result["_id"] = str(result["_id"])
 
-        return src.database.account.model.Account.from_mongo_dict(d=result)
+        return src.database.account.model.Account.from_mongo_dict(result)
 
     def find_one_and_update(
             self,
@@ -47,7 +47,7 @@ class Driver:
                 "_uat": True
             }
 
-        result: pymongo.results.UpdateResult
+        result: dict
         result = self._impl.find_one_and_update(
             filter,
             update,
@@ -57,28 +57,28 @@ class Driver:
             pymongo.ReturnDocument.AFTER
         )
 
-        if not result.acknowledged:
+        if not result:
             return None
 
-        result.raw_result["_id"] = str(result.raw_result["_id"])
+        result["_id"] = str(result["_id"])
 
-        return src.database.account.model.Account.from_mongo_dict(result.raw_result)
+        return src.database.account.model.Account.from_mongo_dict(result)
 
     def find_one_and_delete(
             self,
             filter: typing.MutableMapping
     ) -> typing.Union[src.database.account.model.Account, None]:
-        result: pymongo.results.DeleteResult
+        result: dict
         result = self._impl.find_one_and_delete(
             filter
         )
 
-        if not result.acknowledged:
+        if not result:
             return None
 
-        result.raw_result["_id"] = str(result.raw_result["_id"])
+        result["_id"] = str(result["_id"])
 
-        return src.database.account.model.Account.from_mongo_dict(result.raw_result)
+        return src.database.account.model.Account.from_mongo_dict(result)
 
     def insert_one(
             self,
