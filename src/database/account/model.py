@@ -11,7 +11,7 @@ class AccountEmail:
     primary: bool = False
     confirmed: bool = False
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
@@ -21,7 +21,7 @@ class AccountEmail:
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = AccountEmail()
@@ -34,7 +34,7 @@ class AccountEmail:
 class AccountAuthenticationPassword:
     value: str = None
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
@@ -42,7 +42,7 @@ class AccountAuthenticationPassword:
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = AccountAuthenticationPassword()
@@ -53,45 +53,45 @@ class AccountAuthenticationPassword:
 class AccountAuthenticationPasswords:
     primary: AccountAuthenticationPassword = AccountAuthenticationPassword()
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
-            "primary": self.primary.to_dict(),
+            "primary": self.primary.to_mongo_dict(),
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = AccountAuthenticationPasswords()
-        instance.primary = AccountAuthenticationPassword.from_dict(d["primary"])
+        instance.primary = AccountAuthenticationPassword.from_mongo_dict(d["primary"])
         return instance
 
 
 class AccountAuthentication:
     passwords: AccountAuthenticationPasswords = AccountAuthenticationPasswords()
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
-            "passwords": self.passwords.to_dict(),
+            "passwords": self.passwords.to_mongo_dict(),
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = AccountAuthentication()
-        instance.passwords = AccountAuthenticationPasswords.from_dict(d["passwords"])
+        instance.passwords = AccountAuthenticationPasswords.from_mongo_dict(d["passwords"])
         return instance
 
 
 class AccountVerification:
     email: bool = False
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
@@ -99,7 +99,7 @@ class AccountVerification:
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = AccountVerification()
@@ -148,9 +148,9 @@ class Account:
             self,
             date: datetime.datetime = datetime.datetime.utcnow()
     ) -> None:
-        self._cat = date
+        self._uat = date
 
-    def to_dict(
+    def to_mongo_dict(
             self
     ) -> dict:
         return {
@@ -158,13 +158,13 @@ class Account:
             "_ver": self._ver,
             "_cat": self._cat,
             "_uat": self._uat,
-            "emails": [x.to_dict() for x in self.emails],
-            "verification": self.verification.to_dict(),
-            "authentication": self.authentication.to_dict(),
+            "emails": [x.to_mongo_dict() for x in self.emails],
+            "verification": self.verification.to_mongo_dict(),
+            "authentication": self.authentication.to_mongo_dict(),
         }
 
     @staticmethod
-    def from_dict(
+    def from_mongo_dict(
             d: dict
     ):
         instance = Account()
@@ -172,7 +172,7 @@ class Account:
         instance._ver = d["_ver"]
         instance._cat = d["_cat"]
         instance._uat = d["_uat"]
-        instance.emails = [AccountEmail.from_dict(x) for x in d["emails"]]
-        instance.verification = AccountVerification.from_dict(d["verification"])
-        instance.authentication = AccountAuthentication.from_dict(d["authentication"])
+        instance.emails = [AccountEmail.from_mongo_dict(x) for x in d["emails"]]
+        instance.verification = AccountVerification.from_mongo_dict(d["verification"])
+        instance.authentication = AccountAuthentication.from_mongo_dict(d["authentication"])
         return instance

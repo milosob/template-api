@@ -25,7 +25,7 @@ def emails(
         ]
 ) -> dict:
     return {
-        "emails": [x.to_dict() for x in (value.emails if isinstance(
+        "emails": [x.to_mongo_dict() for x in (value.emails if isinstance(
             value,
             src.database.account.model.Account
         ) else value)]
@@ -42,18 +42,18 @@ def verification(
         "verification": (value.verification if isinstance(
             value,
             src.database.account.model.Account
-        ) else value).to_dict()
+        ) else value).to_mongo_dict()
     }
 
 
-def verification_basic(
+def verification_email(
         value: typing.Union[
             src.database.account.model.Account,
             bool
         ]
 ) -> dict:
     return {
-        "verification.basic": value.verification.basic if isinstance(
+        "verification.email": value.verification.email if isinstance(
             value,
             src.database.account.model.Account
         ) else value
@@ -70,5 +70,5 @@ def authentication_passwords_primary(
         "authentication.password.primary": (value.authentication.passwords.primary if isinstance(
             value,
             src.database.account.model.Account
-        ) else value).to_dict()
+        ) else value).to_mongo_dict()
     }

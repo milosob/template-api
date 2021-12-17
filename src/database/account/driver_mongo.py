@@ -23,7 +23,7 @@ class DriverMongo:
     ) -> typing.Union[src.database.account.model.Account, None]:
 
         document: dict
-        document = model.to_dict()
+        document = model.to_mongo_dict()
 
         del document["_id"]
 
@@ -55,7 +55,7 @@ class DriverMongo:
 
         result["_id"] = str(result["_id"])
 
-        return src.database.account.model.Account.from_dict(d=result)
+        return src.database.account.model.Account.from_mongo_dict(d=result)
 
     def update_one(
             self,
