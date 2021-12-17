@@ -132,9 +132,9 @@ async def account_post_register(
 @router.post(
     path="/register/confirm",
     summary="Account register.",
-    status_code=fastapi.status.HTTP_201_CREATED,
+    status_code=fastapi.status.HTTP_200_OK,
     responses=error_responses | {
-        fastapi.status.HTTP_201_CREATED: {
+        fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountPostRegisterConfirmOut,
             "description": "Resource created."
         }
