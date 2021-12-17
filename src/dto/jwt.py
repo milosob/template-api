@@ -67,7 +67,6 @@ class JwtUserVerification:
         return i
 
 
-# TOP
 class JwtUser:
     revision: int = 1
 
@@ -162,8 +161,9 @@ class JwtPasswordRecover:
         i = JwtPasswordRecover()
         i.revision = d["r"]
         i.identifier = d["i"]
-        i.message = base64.b64decode(d["n"])
+        i.message = base64.b64decode(d["m"])
         i.signature = base64.b64decode(d["s"])
+        return i
 
     def sign(
             self,
@@ -191,6 +191,61 @@ class JwtPasswordRecover:
         return False
 
 
-class Jwt:
+# TOP
+class JwtAccess:
+    revision: int = 1
+
     user: JwtUser
-    password_recover: JwtPasswordRecover
+
+    def __init__(
+            self,
+            user: typing.Optional[JwtUser] = None
+    ):
+        self.user = user
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "r": self.revision,
+            "u": self.user.to_json_dict(),
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict
+    ):
+        i = JwtAccess()
+        i.revision = d["r"]
+        i.user = JwtUser.from_json_dict(d["u"])
+        return i
+
+
+# TOP
+class JwtRefresh:
+    revision: int = 1
+
+    counter: int
+
+    def __init__(
+            self,
+            counter: typing.Optional[int] = 0
+    ):
+        self.counter = counter
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "r": self.revision,
+            "c": self.counter
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict
+    ):
+        i = JwtRefresh()
+        i.revision = d["r"]
+        i.counter = d["c"]
+        return i
