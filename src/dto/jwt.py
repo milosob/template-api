@@ -164,6 +164,70 @@ class JwtUser:
 
 
 # TOP
+class JwtAccess:
+    revision: int = 1
+
+    user: JwtUser
+
+    def __init__(
+            self,
+            user: typing.Optional[JwtUser] = None
+    ):
+        self.user = user
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "r": self.revision,
+            "u": self.user.to_json_dict(),
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict
+    ):
+        revision = d["r"]
+        i = JwtAccess(
+            JwtUser.from_json_dict(d["u"])
+        )
+        i.revision = revision
+        return i
+
+
+# TOP
+class JwtRefresh:
+    revision: int = 1
+
+    counter: int
+
+    def __init__(
+            self,
+            counter: typing.Optional[int] = 0
+    ) -> None:
+        self.counter = counter
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "r": self.revision,
+            "c": self.counter
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict
+    ):
+        revision = d["r"]
+        i = JwtRefresh(
+            d["c"]
+        )
+        i.revision = revision
+        return i
+
+
+# TOP
 class JwtRegister:
     revision: int = 1
 
@@ -189,7 +253,6 @@ class JwtRegister:
         return i
 
 
-# TOP
 class JwtPasswordRecover:
     revision: int = 1
 
@@ -260,67 +323,6 @@ class JwtPasswordRecover:
 
 
 # TOP
-class JwtAccess:
-    revision: int = 1
-
-    user: JwtUser
-
-    def __init__(
-            self,
-            user: typing.Optional[JwtUser] = None
-    ):
-        self.user = user
-
-    def to_json_dict(
-            self
-    ) -> dict:
-        return {
-            "r": self.revision,
-            "u": self.user.to_json_dict(),
-        }
-
-    @staticmethod
-    def from_json_dict(
-            d: dict
-    ):
-        revision = d["r"]
-        i = JwtAccess(
-            JwtUser.from_json_dict(d["u"])
-        )
-        i.revision = revision
-        return i
-
-
-# TOP
-class JwtRefresh:
-    revision: int = 1
-
-    counter: int
-
-    def __init__(
-            self,
-            counter: typing.Optional[int] = 0
-    ) -> None:
-        self.counter = counter
-
-    def to_json_dict(
-            self
-    ) -> dict:
-        return {
-            "r": self.revision,
-            "c": self.counter
-        }
-
-    @staticmethod
-    def from_json_dict(
-            d: dict
-    ):
-        revision = d["r"]
-        i = JwtRefresh(
-            d["c"]
-        )
-        i.revision = revision
-        return i
 
 
 class Jwt:
@@ -356,14 +358,6 @@ class Jwt:
         except AttributeError:
             self.sub = payload["sub"]
 
-    def load_register(
-            self,
-            payload: dict
-    ) -> None:
-        self.load_sub(payload)
-        self.register = JwtRegister.from_json_dict(payload["data"])
-        self.register_scopes = payload["scopes"]
-
     def load_access(
             self,
             payload: dict
@@ -379,6 +373,14 @@ class Jwt:
         self.load_sub(payload)
         self.refresh = JwtRefresh.from_json_dict(payload["data"])
         self.refresh_scopes = payload["scopes"]
+
+    def load_register(
+            self,
+            payload: dict
+    ) -> None:
+        self.load_sub(payload)
+        self.register = JwtRegister.from_json_dict(payload["data"])
+        self.register_scopes = payload["scopes"]
 
     def load_password_recover(
             self,
