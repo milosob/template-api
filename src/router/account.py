@@ -9,8 +9,9 @@ import src.app_state
 import src.database.account.filter
 import src.database.account.update
 import src.database.account.model
-import src.depends.bearer_token
 import src.depends.app_state
+import src.depends.bearer_token
+import src.depends.jwt.password_recover
 import src.dto.account
 import src.dto.error
 import src.dto.jwt
@@ -426,27 +427,12 @@ async def account_post_password_forget(
     }
 )
 async def account_post_password_recover(
-        request: fastapi.Request,
+        jwt_password_recover: src.dto.jwt.JwtPasswordRecover = src.depends.jwt.password_recover.depends(
+            ["type:account-password-recover"]
+        ),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        password_recover_token: str = src.depends.bearer_token.depends(),
-        account_post_password_recover_in: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(
-            ...
-        )
+        account_post_password_recover_in: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(...)
 ):
-    payload: dict
-    payload = app_state.service.jwt.verify(
-        password_recover_token,
-        ["type:account-password-recover"],
-        src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
-        src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
-        src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
-        src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
-        app_state.service.jwt.verify_default_options,
-    )
-
-    jwt_password_recover: src.dto.jwt.JwtPasswordRecover
-    jwt_password_recover = src.dto.jwt.JwtPasswordRecover.from_json_dict(payload["data"])
-
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
