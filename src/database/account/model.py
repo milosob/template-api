@@ -2,10 +2,6 @@ import datetime
 import typing
 
 
-class Base(dict):
-    pass
-
-
 class AccountEmail:
     value: str = None
     primary: bool = False
@@ -24,11 +20,11 @@ class AccountEmail:
     def from_mongo_dict(
             d: dict
     ):
-        instance = AccountEmail()
-        instance.value = d["value"]
-        instance.primary = d["primary"]
-        instance.confirmed = d["confirmed"]
-        return instance
+        i = AccountEmail()
+        i.value = d["value"]
+        i.primary = d["primary"]
+        i.confirmed = d["confirmed"]
+        return i
 
 
 class AccountAuthenticationPassword:
@@ -45,9 +41,9 @@ class AccountAuthenticationPassword:
     def from_mongo_dict(
             d: dict
     ):
-        instance = AccountAuthenticationPassword()
-        instance.value = d["value"]
-        return instance
+        i = AccountAuthenticationPassword()
+        i.value = d["value"]
+        return i
 
 
 class AccountAuthenticationPasswords:
@@ -64,9 +60,9 @@ class AccountAuthenticationPasswords:
     def from_mongo_dict(
             d: dict
     ):
-        instance = AccountAuthenticationPasswords()
-        instance.primary = AccountAuthenticationPassword.from_mongo_dict(d["primary"])
-        return instance
+        i = AccountAuthenticationPasswords()
+        i.primary = AccountAuthenticationPassword.from_mongo_dict(d["primary"])
+        return i
 
 
 class AccountAuthentication:
@@ -83,9 +79,9 @@ class AccountAuthentication:
     def from_mongo_dict(
             d: dict
     ):
-        instance = AccountAuthentication()
-        instance.passwords = AccountAuthenticationPasswords.from_mongo_dict(d["passwords"])
-        return instance
+        i = AccountAuthentication()
+        i.passwords = AccountAuthenticationPasswords.from_mongo_dict(d["passwords"])
+        return i
 
 
 class AccountVerification:
@@ -102,9 +98,9 @@ class AccountVerification:
     def from_mongo_dict(
             d: dict
     ):
-        instance = AccountVerification()
-        instance.email = d["email"]
-        return instance
+        i = AccountVerification()
+        i.email = d["email"]
+        return i
 
 
 class Account:
@@ -154,12 +150,12 @@ class Account:
     def from_mongo_dict(
             d: dict
     ):
-        instance = Account()
-        instance._id = d["_id"]
-        instance._ver = d["_ver"]
-        instance._cat = d["_cat"]
-        instance._uat = d["_uat"]
-        instance.emails = [AccountEmail.from_mongo_dict(x) for x in d["emails"]]
-        instance.verification = AccountVerification.from_mongo_dict(d["verification"])
-        instance.authentication = AccountAuthentication.from_mongo_dict(d["authentication"])
-        return instance
+        i = Account()
+        i._id = d["_id"]
+        i._ver = d["_ver"]
+        i._cat = d["_cat"]
+        i._uat = d["_uat"]
+        i.emails = [AccountEmail.from_mongo_dict(x) for x in d["emails"]]
+        i.verification = AccountVerification.from_mongo_dict(d["verification"])
+        i.authentication = AccountAuthentication.from_mongo_dict(d["authentication"])
+        return i
