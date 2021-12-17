@@ -10,6 +10,7 @@ import hypercorn.asyncio
 import src.app_state
 import src.handler.error
 import src.router.account
+import src.router.me
 
 
 def run(
@@ -64,6 +65,10 @@ def run(
     # app routers
     app.include_router(
         router=src.router.account.router
+    )
+    # app routers
+    app.include_router(
+        router=src.router.me.router
     )
 
     # app state
