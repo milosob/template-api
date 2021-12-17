@@ -25,15 +25,9 @@
     "state": {
         "database": {
             "account": {
-                "driver": "mongo",
-                "mongo": {
-                    "name": "core",
-                    "collection": "account",
-                    "auth": "uri",
-                    "uri": {
-                        "uri": "mongodb://localhost:27017"
-                    }
-                }
+                "uri": "mongodb://localhost:27017",
+                "name": "core",
+                "collection": "account"
             }
         },
         "service": {

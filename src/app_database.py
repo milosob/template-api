@@ -1,12 +1,14 @@
-import typing
+import pymongo
 
-import src.database.account.driver_mongo
+import src.database.account.driver
 
 
 class AppDatabase:
     config: dict
 
-    account: src.database.account.driver_mongo.DriverMongo
+    account_config: dict
+    account_client: pymongo.MongoClient
+    account: src.database.account.driver.Driver
 
     def __init__(
             self,
@@ -14,38 +16,12 @@ class AppDatabase:
     ) -> None:
         self.config = config
 
-        # Account
-        account_config: dict
-        account_config = config["account"]
-        account_driver: str
-        account_driver = account_config["driver"]
-
-        if account_driver not in [
-            "mongo"
-        ]:
-            raise NotImplementedError()
-
-        account_driver_config: dict
-        account_driver_config = account_config[account_driver]
-
-        if account_driver == "mongo":
-            import pymongo
-
-            account_mongo_client: typing.Union[pymongo.mongo_client.MongoClient, None]
-            account_mongo_client = None
-
-            auth: str
-            auth = account_driver_config["auth"]
-
-            if auth == "uri":
-                account_mongo_client = pymongo.mongo_client.MongoClient(
-                    account_driver_config[auth]["uri"]
-                )
-
-            assert account_mongo_client is not None
-
-            self.account = src.database.account.driver_mongo.DriverMongo(
-                account_mongo_client[account_driver_config["name"]][account_driver_config["collection"]]
-            )
-
-        assert self.account is not None
+        self.account_config = config["account"]
+        self.account_client = pymongo.MongoClient(
+            self.account_config["uri"]
+        )
+        self.account = self.account_client.get_database(
+            name=self.account_config["name"]
+        ).get_collection(
+            name=self.account_config["collection"]
+        )

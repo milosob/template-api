@@ -9,7 +9,7 @@ import src.database.account.filter
 import src.database.account.update
 
 
-class DriverMongo:
+class Driver:
     _impl: pymongo.collection.Collection
 
     def __init__(
