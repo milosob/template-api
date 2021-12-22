@@ -11,26 +11,16 @@ import src.error.error_type
 import src.error
 
 
-class JwtUserEmail:
-    value: str
+class JwtUserContactEmail:
+    email: str
     primary: bool
     confirmed: bool
-
-    def __init__(
-            self,
-            value: typing.Optional[str] = None,
-            primary: typing.Optional[bool] = False,
-            confirmed: typing.Optional[bool] = False
-    ) -> None:
-        self.value = value
-        self.primary = primary
-        self.confirmed = confirmed
 
     def to_json_dict(
             self
     ) -> dict:
         return {
-            "v": self.value,
+            "e": self.email,
             "p": 1 if self.primary else 0,
             "c": 1 if self.confirmed else 0
         }
@@ -40,31 +30,53 @@ class JwtUserEmail:
             d: dict,
             revision: int
     ):
-        return JwtUserEmail(
-            d["v"],
-            d["p"] == 1,
-            d["c"] == 1
-        )
+        i = JwtUserContactEmail()
+        i.email = d["e"]
+        i.primary = d["p"] == 1
+        i.confirmed = d["c"] == 1
+        return i
 
     @staticmethod
     def from_account(
-            model: src.database.account.model.AccountEmail
+            model: src.database.account.model.AccountContactEmail
     ):
-        return JwtUserEmail(
-            model.value,
-            model.primary,
-            model.confirmed
-        )
+        i = JwtUserContactEmail()
+        i.email = model.email
+        i.primary = model.primary
+        i.confirmed = model.confirmed
+        return i
+
+
+class JwtUserContact:
+    emails: typing.List[JwtUserContactEmail]
+
+    def to_json_dict(
+            self
+    ) -> dict:
+        return {
+            "e": [email.to_json_dict() for email in self.emails]
+        }
+
+    @staticmethod
+    def from_json_dict(
+            d: dict,
+            revision: int
+    ):
+        i = JwtUserContact()
+        i.emails = [JwtUserContactEmail.from_json_dict(email, revision) for email in d["e"]]
+        return i
+
+    @staticmethod
+    def from_account(
+            model: src.database.account.model.AccountContact
+    ):
+        i = JwtUserContact()
+        i.emails = [JwtUserContactEmail.from_account(email) for email in model.emails]
+        return i
 
 
 class JwtUserVerification:
     email: bool
-
-    def __init__(
-            self,
-            email: typing.Optional[bool] = False
-    ) -> None:
-        self.email = email
 
     def to_json_dict(
             self
@@ -78,17 +90,17 @@ class JwtUserVerification:
             d: dict,
             revision: int
     ):
-        return JwtUserVerification(
-            d["e"] == 1
-        )
+        i = JwtUserVerification()
+        i.email = d["e"] == 1
+        return i
 
     @staticmethod
     def from_account(
             model: src.database.account.model.AccountVerification
     ):
-        return JwtUserVerification(
-            model.email
-        )
+        i = JwtUserVerification()
+        i.email = model.email
+        return i
 
 
 class JwtUser:
@@ -97,28 +109,8 @@ class JwtUser:
     identifier: str
     created_at: datetime.datetime
     updated_at: datetime.datetime
-    emails: typing.List[JwtUserEmail]
+    contact: JwtUserContact
     verification: JwtUserVerification
-
-    def __init__(
-            self,
-            identifier: typing.Optional[str] = None,
-            created_at: typing.Optional[datetime.datetime] = None,
-            updated_at: typing.Optional[datetime.datetime] = None,
-            emails: typing.Optional[typing.List[JwtUserEmail]] = None,
-            verification: typing.Optional[JwtUserVerification] = None
-    ) -> None:
-        if emails is None:
-            emails = []
-
-        if verification is None:
-            verification = JwtUserVerification()
-
-        self.identifier = identifier
-        self.created_at = created_at
-        self.updated_at = updated_at
-        self.emails = emails
-        self.verification = verification
 
     def to_json_dict(
             self
@@ -128,10 +120,7 @@ class JwtUser:
             "i": self.identifier,
             "c": int(self.created_at.timestamp()),
             "u": int(self.updated_at.timestamp()),
-            "em": [
-                email.to_json_dict()
-                for email in self.emails
-            ],
+            "ct": self.contact.to_json_dict(),
             "vr": self.verification.to_json_dict()
         }
 
@@ -140,27 +129,27 @@ class JwtUser:
             d: dict
     ):
         revision = d["r"]
-        i = JwtUser(
-            d["i"],
-            datetime.datetime.utcfromtimestamp(d["c"]),
-            datetime.datetime.utcfromtimestamp(d["u"]),
-            [JwtUserEmail.from_json_dict(email, revision) for email in d["em"]],
-            JwtUserVerification.from_json_dict(d["vr"], revision)
-        )
+
+        i = JwtUser()
         i.revision = revision
+        i.identifier = d["i"]
+        i.created_at = datetime.datetime.utcfromtimestamp(d["c"])
+        i.updated_at = datetime.datetime.utcfromtimestamp(d["u"])
+        i.contact = JwtUserContact.from_json_dict(d["ct"], revision)
+        i.verification = JwtUserVerification.from_json_dict(d["vr"], revision)
         return i
 
     @staticmethod
     def from_account(
             model: src.database.account.model.Account
     ):
-        return JwtUser(
-            model.identifier,
-            model.created_at,
-            model.updated_at,
-            [JwtUserEmail.from_account(email) for email in model.emails],
-            JwtUserVerification.from_account(model.verification)
-        )
+        i = JwtUser()
+        i.identifier = model.identifier
+        i.created_at = model.created_at
+        i.updated_at = model.updated_at
+        i.contact = JwtUserContact.from_account(model.contact)
+        i.verification = JwtUserVerification.from_account(model.verification)
+        return i
 
 
 # TOP
@@ -168,12 +157,6 @@ class JwtAccess:
     revision: int = 1
 
     user: JwtUser
-
-    def __init__(
-            self,
-            user: typing.Optional[JwtUser] = None
-    ):
-        self.user = user
 
     def to_json_dict(
             self
@@ -188,10 +171,10 @@ class JwtAccess:
             d: dict
     ):
         revision = d["r"]
-        i = JwtAccess(
-            JwtUser.from_json_dict(d["u"])
-        )
+
+        i = JwtAccess()
         i.revision = revision
+        i.user = JwtUser.from_json_dict(d["u"])
         return i
 
 
@@ -200,12 +183,6 @@ class JwtRefresh:
     revision: int = 1
 
     counter: int
-
-    def __init__(
-            self,
-            counter: typing.Optional[int] = 0
-    ) -> None:
-        self.counter = counter
 
     def to_json_dict(
             self
@@ -220,21 +197,15 @@ class JwtRefresh:
             d: dict
     ):
         revision = d["r"]
-        i = JwtRefresh(
-            d["c"]
-        )
+        i = JwtRefresh()
         i.revision = revision
+        i.counter = d["c"]
         return i
 
 
 # TOP
 class JwtRegister:
     revision: int = 1
-
-    def __init__(
-            self
-    ) -> None:
-        pass
 
     def to_json_dict(
             self
@@ -260,19 +231,6 @@ class JwtPasswordRecover:
     message: bytes
     signature: bytes
 
-    def __init__(
-            self,
-            identifier: typing.Optional[str] = None,
-            message: typing.Optional[bytes] = None,
-            signature: typing.Optional[bytes] = None
-    ) -> None:
-        if not message:
-            message = os.urandom(16)
-
-        self.identifier = identifier
-        self.message = message
-        self.signature = signature
-
     def to_json_dict(
             self
     ) -> dict:
@@ -288,18 +246,20 @@ class JwtPasswordRecover:
             d: dict
     ):
         revision = d["r"]
-        i = JwtPasswordRecover(
-            d["i"],
-            base64.b64decode(d["m"]),
-            base64.b64decode(d["s"])
-        )
+        i = JwtPasswordRecover()
         i.revision = revision
+        i.identifier = d["i"]
+        i.message = base64.b64decode(d["m"])
+        i.signature = base64.b64decode(d["s"])
         return i
 
     def sign(
             self,
             password: str
     ) -> None:
+        if not self.message:
+            self.message = os.urandom(16)
+
         self.signature = hmac.digest(
             password.encode("utf-8") + self.identifier.encode("utf-8"),
             self.message,

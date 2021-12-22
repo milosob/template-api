@@ -2,8 +2,8 @@ import datetime
 import typing
 
 
-class AccountEmail:
-    value: str = None
+class AccountContactEmail:
+    email: str = None
     primary: bool = False
     confirmed: bool = False
 
@@ -11,7 +11,7 @@ class AccountEmail:
             self
     ) -> dict:
         return {
-            "value": self.value,
+            "email": self.email,
             "primary": self.primary,
             "confirmed": self.confirmed
         }
@@ -20,10 +20,30 @@ class AccountEmail:
     def from_mongo_dict(
             d: dict
     ):
-        i = AccountEmail()
-        i.value = d["value"]
+        i = AccountContactEmail()
+        i.email = d["email"]
         i.primary = d["primary"]
         i.confirmed = d["confirmed"]
+        return i
+
+
+class AccountContact:
+    emails: typing.List[AccountContactEmail] = []
+
+    def to_mongo_dict(
+            self
+    ) -> dict:
+        return {
+            "emails": [x.to_mongo_dict() for x in self.emails]
+        }
+
+    @staticmethod
+    def from_mongo_dict(
+            d: dict,
+            r: int
+    ):
+        i = AccountContact()
+        i.emails = [AccountContactEmail.from_mongo_dict(x) for x in d["emails"]]
         return i
 
 
@@ -133,14 +153,14 @@ class AccountAuthentication:
 
 
 class Account:
-    identifier: str = None
     revision: int = 1
-    created_at: typing.Union[datetime.datetime, None] = None
-    updated_at: typing.Union[datetime.datetime, None] = None
+    identifier: str = None
+    created_at: datetime.datetime = None
+    updated_at: datetime.datetime = None
+
+    contact: AccountContact = AccountContact()
 
     info: AccountInfo = None
-
-    emails: typing.List[AccountEmail] = []
 
     verification: AccountVerification = AccountVerification()
 
@@ -150,12 +170,12 @@ class Account:
             self
     ) -> dict:
         return {
-            "_id": self.identifier,
             "_rev": self.revision,
+            "_id": self.identifier,
             "_cat": self.created_at,
             "_uat": self.updated_at,
+            "contact": self.contact.to_mongo_dict(),
             "info": self.info.to_mongo_dict() if self.info else None,
-            "emails": [x.to_mongo_dict() for x in self.emails],
             "verification": self.verification.to_mongo_dict(),
             "authentication": self.authentication.to_mongo_dict(),
         }
@@ -167,14 +187,14 @@ class Account:
         revision: int = d["_rev"]
 
         i = Account()
+        i.revision = revision
         i.identifier = d["_id"]
         i.created_at = d["_cat"]
         i.updated_at = d["_uat"]
+
+        i.contact = AccountContact.from_mongo_dict(d["contact"], revision)
         i.info = AccountInfo.from_mongo_dict(d["info"], revision)
-        i.emails = [AccountEmail.from_mongo_dict(x) for x in d["emails"]]
         i.verification = AccountVerification.from_mongo_dict(d["verification"])
         i.authentication = AccountAuthentication.from_mongo_dict(d["authentication"])
-
-        i.revision = revision
 
         return i

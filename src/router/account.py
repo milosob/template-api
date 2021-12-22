@@ -51,7 +51,7 @@ error_responses: dict = {
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.account.AccountPostRegisterOut,
             "description": "Resource created."
-        },
+        }
     }
 )
 async def account_post_register(
@@ -74,14 +74,14 @@ async def account_post_register(
 
     account = src.database.account.model.Account()
 
-    account_email: src.database.account.model.AccountEmail
-    account_email = src.database.account.model.AccountEmail()
-    account_email.value = dto.username
-    account_email.primary = True
-    account_email.confirmed = False
+    account_contact_email: src.database.account.model.AccountContactEmail
+    account_contact_email = src.database.account.model.AccountContactEmail()
+    account_contact_email.email = dto.username
+    account_contact_email.primary = True
+    account_contact_email.confirmed = False
 
-    account.emails.append(
-        account_email
+    account.contact.emails.append(
+        account_contact_email
     )
 
     account.authentication.passwords.primary.value = app_state.service.password.password_hash(
@@ -111,7 +111,7 @@ async def account_post_register(
 
     try:
         await app_state.service.mail.send_template(
-            {next(email for email in account.emails if email.primary).value: ""},
+            {next(email for email in account.contact.emails if email.primary).email: ""},
             None,
             None,
             app_state.service.locale.by_request(request),
@@ -158,23 +158,23 @@ async def account_post_register_confirm(
 
     account.verification.email = True
 
-    account_email_primary: src.database.account.model.AccountEmail
-    account_email_primary = next((email for email in account.emails if email.primary), None)
+    account_contact_email_primary: src.database.account.model.AccountContactEmail
+    account_contact_email_primary = next((email for email in account.contact.emails if email.primary), None)
 
-    if not account_email_primary:
+    if not account_contact_email_primary:
         raise src.error.error.Error(
             fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR,
             src.error.error_type.INTERNAL_SERVER_ERROR
         )
 
-    account_email_primary.confirmed = True
+    account_contact_email_primary.confirmed = True
 
     if not app_state.database.account.update_one(
             account,
             {
                 "$set": {
                     src.database.account.update.verification,
-                    src.database.account.update.emails
+                    src.database.account.update.contact_emails
                 }
             }
     ):
@@ -223,12 +223,20 @@ async def account_post_authenticate(
             src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
         )
 
+    jwt_access: src.dto.jwt.JwtAccess
+    jwt_access = src.dto.jwt.JwtAccess()
+
+    jwt_access.user = src.dto.jwt.JwtUser.from_account(account)
+
+    jwt_refresh: src.dto.jwt.JwtRefresh
+    jwt_refresh = src.dto.jwt.JwtRefresh()
+
+    jwt_refresh.counter = 0
+
     access_token: str
     access_token = app_state.service.jwt.issue(
         account.identifier,
-        src.dto.jwt.JwtAccess(
-            src.dto.jwt.JwtUser.from_account(account)
-        ).to_json_dict(),
+        jwt_access.to_json_dict(),
         app_state.service.jwt.lifetime_access,
         ["type:access"]
     )
@@ -236,9 +244,7 @@ async def account_post_authenticate(
     refresh_token: str
     refresh_token = app_state.service.jwt.issue(
         account.identifier,
-        src.dto.jwt.JwtRefresh(
-            0
-        ).to_json_dict(),
+        jwt_refresh.to_json_dict(),
         app_state.service.jwt.lifetime_refresh,
         ["type:refresh"],
         access_token
@@ -320,9 +326,9 @@ async def account_post_password_forget(
     old_password = account.authentication.passwords.primary.value
 
     jwt_password_recover: src.dto.jwt.JwtPasswordRecover
-    jwt_password_recover = src.dto.jwt.JwtPasswordRecover(
-        account.identifier
-    )
+    jwt_password_recover = src.dto.jwt.JwtPasswordRecover()
+
+    jwt_password_recover.identifier = account.identifier
 
     jwt_password_recover.sign(
         old_password
@@ -338,7 +344,7 @@ async def account_post_password_forget(
 
     try:
         await app_state.service.mail.send_template(
-            {next(email for email in account.emails if email.primary).value: ""},
+            {next(email for email in account.contact.emails if email.primary).email: ""},
             None,
             None,
             app_state.service.locale.by_request(request),
