@@ -154,6 +154,7 @@ class AccountAuthentication:
 
 class Account:
     revision: int = 1
+
     identifier: str = None
     created_at: datetime.datetime = None
     updated_at: datetime.datetime = None
