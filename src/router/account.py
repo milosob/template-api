@@ -416,3 +416,60 @@ async def account_post_password_recover(
     return src.dto.account.AccountPostPasswordRecoverOut(
         password=None
     )
+
+
+@router.get(
+    path="/info",
+    summary="Fetch resource.",
+    status_code=fastapi.status.HTTP_200_OK,
+    responses=error_responses | {
+        fastapi.status.HTTP_200_OK: {
+            "model": src.dto.account.AccountGetInfoOut,
+            "description": "Resource fetched."
+        },
+    }
+)
+async def account_get_info(
+        request: fastapi.Request,
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
+        model: src.dto.account.AccountGetInfoIn = fastapi.Depends()
+):
+    pass
+
+
+@router.put(
+    path="/info",
+    summary="Modify resource.",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    responses=error_responses | {
+        fastapi.status.HTTP_201_CREATED: {
+            "model": src.dto.account.AccountPutInfoOut,
+            "description": "Resource modified."
+        },
+    }
+)
+async def account_put_info(
+        request: fastapi.Request,
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
+        model: src.dto.account.AccountPutInfoIn = fastapi.Body(...)
+):
+    pass
+
+
+@router.post(
+    path="/info",
+    summary="Create resource.",
+    status_code=fastapi.status.HTTP_201_CREATED,
+    responses=error_responses | {
+        fastapi.status.HTTP_201_CREATED: {
+            "model": src.dto.account.AccountPostInfoOut,
+            "description": "Resource created."
+        },
+    }
+)
+async def me_post(
+        request: fastapi.Request,
+        app_state: src.app_state.AppState = src.depends.app_state.depends(),
+        model: src.dto.account.AccountPostInfoIn = fastapi.Body(...)
+):
+    pass

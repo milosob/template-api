@@ -1,10 +1,11 @@
+import datetime
 import typing
 
 import fastapi
 import pydantic
 
 
-# POST ACCOUNT REGISTER
+# ACCOUNT POST  REGISTER
 
 # noinspection PyMethodParameters
 class AccountPostRegisterInBase(pydantic.BaseModel):
@@ -47,7 +48,7 @@ class AccountPostRegisterOut(AccountPostRegisterOutBase):
     pass
 
 
-# POST ACCOUNT REGISTER CONFIRM
+# ACCOUNT POST  REGISTER CONFIRM
 
 class AccountPostRegisterConfirmInBase(pydantic.BaseModel):
     pass
@@ -65,7 +66,7 @@ class AccountPostRegisterConfirmOut(AccountPostRegisterConfirmOutBase):
     pass
 
 
-# POST ACCOUNT AUTHENTICATE
+# ACCOUNT POST  AUTHENTICATE
 
 # noinspection PyMethodParameters
 class AccountPostAuthenticateInBase(pydantic.BaseModel):
@@ -108,7 +109,7 @@ class AccountPostAuthenticateOut(AccountPostAuthenticateOutBase):
     pass
 
 
-# POST ACCOUNT AUTHENTICATE REFRESH
+# ACCOUNT POST  AUTHENTICATE REFRESH
 
 # noinspection PyMethodParameters
 class AccountPostAuthenticateRefreshInBase(pydantic.BaseModel):
@@ -147,7 +148,7 @@ class AccountPostAuthenticateRefreshOut(AccountPostAuthenticateRefreshOutBase):
     pass
 
 
-# POST ACCOUNT PASSWORD FORGET
+# ACCOUNT POST  PASSWORD FORGET
 
 # noinspection PyMethodParameters
 class AccountPostPasswordForgetInBase(pydantic.BaseModel):
@@ -175,7 +176,7 @@ class AccountPostPasswordForgetOut(AccountPostPasswordForgetOutBase):
     pass
 
 
-# POST ACCOUNT PASSWORD RECOVER
+# ACCOUNT POST PASSWORD RECOVER
 
 # noinspection PyMethodParameters
 class AccountPostPasswordRecoverInBase(pydantic.BaseModel):
@@ -200,4 +201,77 @@ class AccountPostPasswordRecoverOutBase(pydantic.BaseModel):
 
 
 class AccountPostPasswordRecoverOut(AccountPostPasswordRecoverOutBase):
+    pass
+
+
+# ACCOUNT GET INFO
+class AccountGetInfoInBase(pydantic.BaseModel):
+    pass
+
+
+class AccountGetInfoIn(AccountGetInfoInBase):
+    pass
+
+
+class AccountGetInfoOutBase(pydantic.BaseModel):
+    alias: str
+    gender: str
+    birthdate: datetime.datetime
+
+
+class AccountGetInfoOut(AccountGetInfoOutBase):
+    pass
+
+
+# ACCOUNT PUT INFO
+class AccountPutInfoInBase(pydantic.BaseModel):
+    alias: typing.Optional[str] = fastapi.Body(
+        ...
+    )
+    gender: typing.Optional[str] = fastapi.Body(
+        ...
+    )
+    birthdate: typing.Optional[datetime.datetime] = fastapi.Body(
+        ...
+    )
+
+
+class AccountPutInfoIn(AccountPutInfoInBase):
+    pass
+
+
+class AccountPutInfoOutBase(pydantic.BaseModel):
+    alias: typing.Optional[str]
+    gender: typing.Optional[str]
+    birthdate: typing.Optional[datetime.datetime]
+
+
+class AccountPutInfoOut(AccountPutInfoOutBase):
+    pass
+
+
+# ACCOUNT POST INFO
+class AccountPostInfoInBase(pydantic.BaseModel):
+    alias: str = fastapi.Body(
+        ...
+    )
+    gender: str = fastapi.Body(
+        ...
+    )
+    birthdate: datetime.datetime = fastapi.Body(
+        ...
+    )
+
+
+class AccountPostInfoIn(AccountPostInfoInBase):
+    pass
+
+
+class AccountPostInfoOutBase(pydantic.BaseModel):
+    alias: str
+    gender: str
+    birthdate: datetime.datetime
+
+
+class AccountPostInfoOut(AccountPostInfoOutBase):
     pass
