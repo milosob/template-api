@@ -100,10 +100,13 @@ async def account_post_register(
 
     account = account_inserted
 
+    jwt_register: src.dto.jwt.JwtRegister
+    jwt_register = src.dto.jwt.JwtRegister()
+
     account_register_token: str
     account_register_token = app_state.service.jwt.issue(
         account.identifier,
-        src.dto.jwt.JwtRegister().to_json_dict(),
+        jwt_register.to_json_dict(),
         app_state.service.jwt.lifetime_account_register,
         ["type:register"]
     )
@@ -324,7 +327,6 @@ async def account_post_password_forget(
 
     jwt_password_recover: src.dto.jwt.JwtPasswordRecover
     jwt_password_recover = src.dto.jwt.JwtPasswordRecover()
-    jwt_password_recover.identifier = account.identifier
     jwt_password_recover.sign(
         old_password
     )
@@ -374,7 +376,7 @@ async def account_post_password_recover(
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            jwt.password_recover.identifier
+            jwt.sub
         )
     )
 
@@ -439,7 +441,7 @@ async def account_get_info(
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            jwt.password_recover.identifier
+            jwt.sub
         )
     )
 
@@ -503,7 +505,7 @@ async def account_post_info(
     account: src.database.account.model.Account
     account = app_state.database.account.find_one(
         src.database.account.filter.identifier(
-            jwt.password_recover.identifier
+            jwt.sub
         )
     )
 

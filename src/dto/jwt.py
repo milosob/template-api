@@ -106,7 +106,6 @@ class JwtUserVerification:
 class JwtUser:
     revision: int = 1
 
-    identifier: str
     created_at: datetime.datetime
     updated_at: datetime.datetime
     contact: JwtUserContact
@@ -117,7 +116,6 @@ class JwtUser:
     ) -> dict:
         return {
             "r": self.revision,
-            "i": self.identifier,
             "c": int(self.created_at.timestamp()),
             "u": int(self.updated_at.timestamp()),
             "ct": self.contact.to_json_dict(),
@@ -132,7 +130,6 @@ class JwtUser:
 
         i = JwtUser()
         i.revision = revision
-        i.identifier = d["i"]
         i.created_at = datetime.datetime.utcfromtimestamp(d["c"])
         i.updated_at = datetime.datetime.utcfromtimestamp(d["u"])
         i.contact = JwtUserContact.from_json_dict(d["ct"], revision)
@@ -144,7 +141,6 @@ class JwtUser:
             model: src.database.account.model.Account
     ):
         i = JwtUser()
-        i.identifier = model.identifier
         i.created_at = model.created_at
         i.updated_at = model.updated_at
         i.contact = JwtUserContact.from_account(model.contact)
@@ -227,7 +223,6 @@ class JwtRegister:
 class JwtPasswordRecover:
     revision: int = 1
 
-    identifier: str
     message: bytes
     signature: bytes
 
@@ -236,7 +231,6 @@ class JwtPasswordRecover:
     ) -> dict:
         return {
             "r": self.revision,
-            "i": self.identifier,
             "m": base64.b64encode(self.message).decode("utf-8"),
             "s": base64.b64encode(self.signature).decode("utf-8"),
         }
@@ -248,7 +242,6 @@ class JwtPasswordRecover:
         revision = d["r"]
         i = JwtPasswordRecover()
         i.revision = revision
-        i.identifier = d["i"]
         i.message = base64.b64decode(d["m"])
         i.signature = base64.b64decode(d["s"])
         return i
@@ -261,7 +254,7 @@ class JwtPasswordRecover:
             self.message = os.urandom(16)
 
         self.signature = hmac.digest(
-            password.encode("utf-8") + self.identifier.encode("utf-8"),
+            password.encode("utf-8"),
             self.message,
             "sha256"
         )
@@ -274,7 +267,7 @@ class JwtPasswordRecover:
             return hmac.compare_digest(
                 self.signature,
                 hmac.digest(
-                    password.encode("utf-8") + self.identifier.encode("utf-8"),
+                    password.encode("utf-8"),
                     self.message,
                     "sha256"
                 )
