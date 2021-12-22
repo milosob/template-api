@@ -103,12 +103,12 @@ async def account_post_register(
     jwt_register: src.dto.jwt.JwtRegister
     jwt_register = src.dto.jwt.JwtRegister()
 
-    account_register_token: str
-    account_register_token = app_state.service.jwt.issue(
+    register_token: str
+    register_token = app_state.service.jwt.issue(
         account.identifier,
         jwt_register.to_json_dict(),
-        app_state.service.jwt.lifetime_account_register,
-        ["type:register"]
+        app_state.service.jwt.lifetime_register,
+        app_state.service.jwt.issue_register_scopes
     )
 
     try:
@@ -118,7 +118,7 @@ async def account_post_register(
             None,
             app_state.service.locale.by_request(request),
             app_state.service.template.mail_account_register,
-            token=account_register_token
+            token=register_token
         )
     except Exception:
         raise src.error.error.Error(
@@ -238,7 +238,7 @@ async def account_post_authenticate(
         account.identifier,
         jwt_access.to_json_dict(),
         app_state.service.jwt.lifetime_access,
-        ["type:access"]
+        app_state.service.jwt.issue_access_scopes
     )
 
     refresh_token: str
@@ -246,7 +246,7 @@ async def account_post_authenticate(
         account.identifier,
         jwt_refresh.to_json_dict(),
         app_state.service.jwt.lifetime_refresh,
-        ["type:refresh"],
+        app_state.service.jwt.issue_refresh_scopes,
         access_token
     )
 
@@ -335,8 +335,8 @@ async def account_post_password_forget(
     recover_token = app_state.service.jwt.issue(
         account.identifier,
         jwt_recover.to_json_dict(),
-        app_state.service.jwt.lifetime_password_recover,
-        ["type:recover"]
+        app_state.service.jwt.lifetime_recover,
+        app_state.service.jwt.issue_recover_scopes
     )
 
     try:

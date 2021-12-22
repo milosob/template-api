@@ -18,14 +18,24 @@ class ServiceJwt:
     issue_key: str
     issue_alg: str
 
+    issue_access_scopes: typing.List[str]
+    issue_refresh_scopes: typing.List[str]
+    issue_register_scopes: typing.List[str]
+    issue_recover_scopes: typing.List[str]
+
     verify_ids: typing.List[str]
     verify_keys: typing.List[str]
     verify_algs: typing.List[str]
 
+    verify_access_scopes: typing.List[str]
+    verify_refresh_scopes: typing.List[str]
+    verify_register_scopes: typing.List[str]
+    verify_recover_scopes: typing.List[str]
+
     lifetime_access: int
     lifetime_refresh: int
-    lifetime_password_recover: int
-    lifetime_account_register: int
+    lifetime_register: int
+    lifetime_recover: int
 
     verify_default_options: dict
     verify_refresh_options: dict
@@ -39,15 +49,39 @@ class ServiceJwt:
         self.issue_id = config["issue_id"]
         self.issue_key = config["issue_key"]
         self.issue_alg = config["issue_alg"]
+        self.issue_access_scopes = [
+            "type:access"
+        ]
+        self.issue_refresh_scopes = [
+            "type:refresh"
+        ]
+        self.issue_register_scopes = [
+            "type:register"
+        ]
+        self.issue_recover_scopes = [
+            "type:recover"
+        ]
 
         self.verify_ids = config["verify_ids"]
         self.verify_keys = config["verify_keys"]
         self.verify_algs = config["verify_algs"]
+        self.verify_access_scopes = [
+            "type:access"
+        ]
+        self.verify_refresh_scopes = [
+            "type:refresh"
+        ]
+        self.verify_register_scopes = [
+            "type:register"
+        ]
+        self.verify_recover_scopes = [
+            "type:recover"
+        ]
 
         self.lifetime_access = config["lifetime"]["access"]
         self.lifetime_refresh = config["lifetime"]["refresh"]
-        self.lifetime_password_recover = config["lifetime"]["password_recover"]
-        self.lifetime_account_register = config["lifetime"]["account_register"]
+        self.lifetime_register = config["lifetime"]["register"]
+        self.lifetime_recover = config["lifetime"]["recover"]
 
         self.verify_default_options = {
             "verify_signature": True,
