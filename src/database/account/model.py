@@ -46,6 +46,9 @@ class AccountInfo:
             d: dict,
             r: int
     ):
+        if not d:
+            return None
+
         i = AccountInfo()
         i.alias = d["alias"]
         i.gender = d["gender"]
@@ -135,7 +138,7 @@ class Account:
     created_at: typing.Union[datetime.datetime, None] = None
     updated_at: typing.Union[datetime.datetime, None] = None
 
-    info: AccountInfo = AccountInfo()
+    info: AccountInfo = None
 
     emails: typing.List[AccountEmail] = []
 
@@ -151,6 +154,7 @@ class Account:
             "_rev": self.revision,
             "_cat": self.created_at,
             "_uat": self.updated_at,
+            "info": self.info.to_mongo_dict() if self.info else None,
             "emails": [x.to_mongo_dict() for x in self.emails],
             "verification": self.verification.to_mongo_dict(),
             "authentication": self.authentication.to_mongo_dict(),
