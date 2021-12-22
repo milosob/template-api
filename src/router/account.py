@@ -435,7 +435,32 @@ async def account_get_info(
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountGetInfoIn = fastapi.Depends()
 ):
-    pass
+    account: src.database.account.model.Account
+    account = app_state.database.account.find_one(
+        src.database.account.filter.identifier(
+            jwt.password_recover.identifier
+        )
+    )
+
+    if not account:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_400_BAD_REQUEST,
+            # TODO
+            ""
+        )
+
+    if not account.info:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_404_NOT_FOUND,
+            # TODO
+            ""
+        )
+
+    return src.dto.account.AccountGetInfoOut(
+        alias=account.info.alias,
+        gender=account.info.gender,
+        birthdate=account.info.birthdate
+    )
 
 
 @router.put(
@@ -454,7 +479,10 @@ async def account_put_info(
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountPutInfoIn = fastapi.Body(...)
 ):
-    pass
+    raise src.error.error.Error(
+        fastapi.status.HTTP_501_NOT_IMPLEMENTED,
+        src.error.error_type.NOT_IMPLEMENTED
+    )
 
 
 @router.post(
@@ -473,4 +501,40 @@ async def account_post_info(
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountPostInfoIn = fastapi.Body(...)
 ):
-    pass
+    account: src.database.account.model.Account
+    account = app_state.database.account.find_one(
+        src.database.account.filter.identifier(
+            jwt.password_recover.identifier
+        )
+    )
+
+    if not account:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_400_BAD_REQUEST,
+            # TODO
+            ""
+        )
+
+    account.info = src.database.account.model.AccountInfo()
+    account.info.alias = dto.alias
+    account.info.gender = dto.gender
+    account.info.birthdate = dto.birthdate
+
+    if not app_state.database.account.update_one(
+            account,
+            {
+                "$set": {
+                    src.database.account.update.info
+                }
+            }
+    ):
+        raise src.error.error.Error(
+            fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            src.error.error_type.SERVICE_UNAVAILABLE
+        )
+
+    return src.dto.account.AccountPostInfoOut(
+        alias=dto.alias,
+        gender=dto.gender,
+        birthdate=dto.birthdate
+    )

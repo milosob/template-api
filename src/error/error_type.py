@@ -1,5 +1,6 @@
 # GENERIC
 INTERNAL_SERVER_ERROR = "internal-server-error"
+NOT_IMPLEMENTED = "not-implemented"
 
 # SERVICE_UNAVAILABLE
 SERVICE_UNAVAILABLE = "service-unavailable"

@@ -31,6 +31,20 @@ def updated_at(
     }
 
 
+def info(
+        value: typing.Union[
+            src.database.account.model.Account,
+            src.database.account.model.AccountInfo
+        ]
+) -> typing.MutableMapping:
+    return {
+        "info": (value.info if isinstance(
+            value,
+            src.database.account.model.Account
+        ) else value).to_mongo_dict()
+    }
+
+
 def emails(
         value: typing.Union[
             src.database.account.model.Account,
