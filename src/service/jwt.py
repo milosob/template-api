@@ -43,7 +43,7 @@ class ServiceJwt:
     def __init__(
             self,
             config: dict
-    ):
+    ) -> None:
         self.config = config
 
         self.issue_id = config["issue_id"]
@@ -162,7 +162,7 @@ class ServiceJwt:
             error_type: str,
             options: dict,
             access_token: str
-    ):
+    ) -> dict:
         try:
             # noinspection PyTypeChecker
             return jose.jwt.decode(
