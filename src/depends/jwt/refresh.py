@@ -16,12 +16,12 @@ def depends(
 ) -> src.dto.jwt.Jwt:
     def dependency(
             app_state: src.app_state.AppState = src.depends.app_state.depends(),
-            model: src.dto.account.AccountPostAuthenticateRefreshIn = fastapi.Body(...)
+            dto: src.dto.account.AccountPostAuthenticateRefreshIn = fastapi.Body(...)
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
         jwt.load_access(
             app_state.service.jwt.verify(
-                model.access_token,
+                dto.access_token,
                 app_state.service.jwt.verify_access_scopes,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
@@ -32,14 +32,14 @@ def depends(
         )
         jwt.load_refresh(
             app_state.service.jwt.verify(
-                model.refresh_token,
+                dto.refresh_token,
                 app_state.service.jwt.verify_refresh_scopes + scopes,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_SCOPES,
                 app_state.service.jwt.verify_refresh_options,
-                model.access_token
+                dto.access_token
             )
         )
         return jwt
