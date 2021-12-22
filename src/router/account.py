@@ -8,6 +8,7 @@ import src.database.account.filter
 import src.database.account.update
 import src.database.account.model
 import src.depends.app_state
+import src.depends.jwt.access
 import src.depends.jwt.password_recover
 import src.depends.jwt.refresh
 import src.depends.jwt.register
@@ -430,9 +431,9 @@ async def account_post_password_recover(
     }
 )
 async def account_get_info(
-        request: fastapi.Request,
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.access.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        model: src.dto.account.AccountGetInfoIn = fastapi.Depends()
+        dto: src.dto.account.AccountGetInfoIn = fastapi.Depends()
 ):
     pass
 
@@ -449,9 +450,9 @@ async def account_get_info(
     }
 )
 async def account_put_info(
-        request: fastapi.Request,
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.access.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        model: src.dto.account.AccountPutInfoIn = fastapi.Body(...)
+        dto: src.dto.account.AccountPutInfoIn = fastapi.Body(...)
 ):
     pass
 
@@ -467,9 +468,9 @@ async def account_put_info(
         },
     }
 )
-async def me_post(
-        request: fastapi.Request,
+async def account_post_info(
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.access.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        model: src.dto.account.AccountPostInfoIn = fastapi.Body(...)
+        dto: src.dto.account.AccountPostInfoIn = fastapi.Body(...)
 ):
     pass
