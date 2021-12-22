@@ -27,6 +27,51 @@ class AccountEmail:
         return i
 
 
+class AccountInfo:
+    alias: str = None
+    gender: str = None
+    birthdate: datetime.datetime = None
+
+    def to_mongo_dict(
+            self
+    ) -> dict:
+        return {
+            "alias": self.alias,
+            "gender": self.gender,
+            "birthdate": self.birthdate
+        }
+
+    @staticmethod
+    def from_mongo_dict(
+            d: dict,
+            r: int
+    ):
+        i = AccountInfo()
+        i.alias = d["alias"]
+        i.gender = d["gender"]
+        i.birthdate = d["birthdate"]
+        return i
+
+
+class AccountVerification:
+    email: bool = False
+
+    def to_mongo_dict(
+            self
+    ) -> dict:
+        return {
+            "email": self.email
+        }
+
+    @staticmethod
+    def from_mongo_dict(
+            d: dict
+    ):
+        i = AccountVerification()
+        i.email = d["email"]
+        return i
+
+
 class AccountAuthenticationPassword:
     value: str = None
 
@@ -84,30 +129,13 @@ class AccountAuthentication:
         return i
 
 
-class AccountVerification:
-    email: bool = False
-
-    def to_mongo_dict(
-            self
-    ) -> dict:
-        return {
-            "email": self.email
-        }
-
-    @staticmethod
-    def from_mongo_dict(
-            d: dict
-    ):
-        i = AccountVerification()
-        i.email = d["email"]
-        return i
-
-
 class Account:
-    _id: str = None
-    _ver: int = 1
-    _cat: typing.Union[datetime.datetime, None] = None
-    _uat: typing.Union[datetime.datetime, None] = None
+    identifier: str = None
+    revision: int = 1
+    created_at: typing.Union[datetime.datetime, None] = None
+    updated_at: typing.Union[datetime.datetime, None] = None
+
+    info: AccountInfo = AccountInfo()
 
     emails: typing.List[AccountEmail] = []
 
@@ -115,32 +143,14 @@ class Account:
 
     authentication: AccountAuthentication = AccountAuthentication()
 
-    @property
-    def identifier(
-            self
-    ) -> typing.Union[str, None]:
-        return self._id
-
-    @property
-    def created_at(
-            self
-    ) -> typing.Union[datetime.datetime, None]:
-        return self._cat
-
-    @property
-    def updated_at(
-            self
-    ) -> typing.Union[datetime.datetime, None]:
-        return self._uat
-
     def to_mongo_dict(
             self
     ) -> dict:
         return {
-            "_id": self._id,
-            "_ver": self._ver,
-            "_cat": self._cat,
-            "_uat": self._uat,
+            "_id": self.identifier,
+            "_rev": self.revision,
+            "_cat": self.created_at,
+            "_uat": self.updated_at,
             "emails": [x.to_mongo_dict() for x in self.emails],
             "verification": self.verification.to_mongo_dict(),
             "authentication": self.authentication.to_mongo_dict(),
@@ -150,12 +160,17 @@ class Account:
     def from_mongo_dict(
             d: dict
     ):
+        revision: int = d["_rev"]
+
         i = Account()
-        i._id = d["_id"]
-        i._ver = d["_ver"]
-        i._cat = d["_cat"]
-        i._uat = d["_uat"]
+        i.identifier = d["_id"]
+        i.created_at = d["_cat"]
+        i.updated_at = d["_uat"]
+        i.info = AccountInfo.from_mongo_dict(d["info"], revision)
         i.emails = [AccountEmail.from_mongo_dict(x) for x in d["emails"]]
         i.verification = AccountVerification.from_mongo_dict(d["verification"])
         i.authentication = AccountAuthentication.from_mongo_dict(d["authentication"])
+
+        i.revision = revision
+
         return i

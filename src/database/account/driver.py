@@ -86,8 +86,8 @@ class Driver:
     ) -> typing.Union[src.database.account.model.Account, None]:
         date_now: datetime.datetime = datetime.datetime.utcnow()
 
-        model._cat = date_now
-        model._uat = date_now
+        model.created_at = date_now
+        model.updated_at = date_now
 
         document: dict
         document = model.to_mongo_dict()
