@@ -74,14 +74,13 @@ async def account_post_register(
 
     account = src.database.account.model.Account()
 
-    account_contact_email: src.database.account.model.AccountContactEmail
-    account_contact_email = src.database.account.model.AccountContactEmail()
-    account_contact_email.email = dto.username
-    account_contact_email.primary = True
-    account_contact_email.confirmed = False
-
+    account_contact_email_primary: src.database.account.model.AccountContactEmail
+    account_contact_email_primary = src.database.account.model.AccountContactEmail()
+    account_contact_email_primary.email = dto.username
+    account_contact_email_primary.primary = True
+    account_contact_email_primary.confirmed = False
     account.contact.emails.append(
-        account_contact_email
+        account_contact_email_primary
     )
 
     account.authentication.passwords.primary.value = app_state.service.password.password_hash(
@@ -225,12 +224,10 @@ async def account_post_authenticate(
 
     jwt_access: src.dto.jwt.JwtAccess
     jwt_access = src.dto.jwt.JwtAccess()
-
     jwt_access.user = src.dto.jwt.JwtUser.from_account(account)
 
     jwt_refresh: src.dto.jwt.JwtRefresh
     jwt_refresh = src.dto.jwt.JwtRefresh()
-
     jwt_refresh.counter = 0
 
     access_token: str
@@ -327,9 +324,7 @@ async def account_post_password_forget(
 
     jwt_password_recover: src.dto.jwt.JwtPasswordRecover
     jwt_password_recover = src.dto.jwt.JwtPasswordRecover()
-
     jwt_password_recover.identifier = account.identifier
-
     jwt_password_recover.sign(
         old_password
     )

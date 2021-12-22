@@ -45,20 +45,6 @@ def info(
     }
 
 
-def emails(
-        value: typing.Union[
-            src.database.account.model.Account,
-            typing.List[src.database.account.model.AccountContactEmail]
-        ]
-) -> typing.MutableMapping:
-    return {
-        "emails": [x.to_mongo_dict() for x in (value.emails if isinstance(
-            value,
-            src.database.account.model.Account
-        ) else value)]
-    }
-
-
 def contact_emails(
         value: typing.Union[
             src.database.account.model.Account,
