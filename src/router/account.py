@@ -335,8 +335,8 @@ async def account_post_password_forget(
     recover_token = app_state.service.jwt.issue(
         account.identifier,
         jwt_recover.to_json_dict(),
-        app_state.service.jwt.lifetime_ecover,
-        app_state.service.jwt.issue_recover_scopes
+        app_state.service.jwt.lifetime_recover,
+        app_state.service.jwt.issue_recover_scopes + ["recover:password"]
     )
 
     try:
@@ -369,7 +369,7 @@ async def account_post_password_forget(
     }
 )
 async def account_post_password_recover(
-        jwt: src.dto.jwt.Jwt = src.depends.jwt.recover.depends(),
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.recover.depends(["recover:password"]),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(...)
 ):
