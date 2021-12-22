@@ -449,7 +449,7 @@ async def account_post_password_recover(
         fastapi.status.HTTP_200_OK: {
             "model": src.dto.account.AccountGetInfoOut,
             "description": "Resource fetched."
-        },
+        }
     }
 )
 async def account_get_info(
@@ -486,12 +486,12 @@ async def account_get_info(
 @router.put(
     path="/info",
     summary="Modify resource.",
-    status_code=fastapi.status.HTTP_201_CREATED,
+    status_code=fastapi.status.HTTP_200_OK,
     responses=error_responses | {
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.account.AccountPutInfoOut,
             "description": "Resource modified."
-        },
+        }
     }
 )
 async def account_put_info(
@@ -535,7 +535,7 @@ async def account_put_info(
         fastapi.status.HTTP_201_CREATED: {
             "model": src.dto.account.AccountPostInfoOut,
             "description": "Resource created."
-        },
+        }
     }
 )
 async def account_post_info(
