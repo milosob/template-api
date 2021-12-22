@@ -18,7 +18,7 @@ def depends(
             app_state: src.app_state.AppState = src.depends.app_state.depends()
     ) -> src.dto.jwt.Jwt:
         jwt = src.dto.jwt.Jwt()
-        jwt.load_password_recover(
+        jwt.load_recover(
             app_state.service.jwt.verify(
                 token,
                 ["type:recover"] + scopes,

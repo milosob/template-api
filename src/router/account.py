@@ -9,7 +9,7 @@ import src.database.account.update
 import src.database.account.model
 import src.depends.app_state
 import src.depends.jwt.access
-import src.depends.jwt.password_recover
+import src.depends.jwt.recover
 import src.depends.jwt.refresh
 import src.depends.jwt.register
 import src.dto.account
@@ -325,16 +325,16 @@ async def account_post_password_forget(
     old_password: str
     old_password = account.authentication.passwords.primary.value
 
-    jwt_password_recover: src.dto.jwt.JwtPasswordRecover
-    jwt_password_recover = src.dto.jwt.JwtPasswordRecover()
-    jwt_password_recover.sign(
+    jwt_recover: src.dto.jwt.JwtRecover
+    jwt_recover = src.dto.jwt.JwtRecover()
+    jwt_recover.sign(
         old_password
     )
 
-    password_recover_token: str
-    password_recover_token = app_state.service.jwt.issue(
+    recover_token: str
+    recover_token = app_state.service.jwt.issue(
         account.identifier,
-        jwt_password_recover.to_json_dict(),
+        jwt_recover.to_json_dict(),
         app_state.service.jwt.lifetime_password_recover,
         ["type:recover"]
     )
@@ -346,7 +346,7 @@ async def account_post_password_forget(
             None,
             app_state.service.locale.by_request(request),
             app_state.service.template.mail_account_password_recover,
-            token=password_recover_token
+            token=recover_token
         )
     except Exception:
         raise src.error.error.Error(
@@ -369,7 +369,7 @@ async def account_post_password_forget(
     }
 )
 async def account_post_password_recover(
-        jwt: src.dto.jwt.Jwt = src.depends.jwt.password_recover.depends(),
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.recover.depends(),
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountPostPasswordRecoverIn = fastapi.Body(...)
 ):
@@ -389,7 +389,7 @@ async def account_post_password_recover(
     old_password: str
     old_password = account.authentication.passwords.primary.value
 
-    if not jwt.password_recover.verify(
+    if not jwt.recover.verify(
             old_password
     ):
         raise src.error.error.Error(

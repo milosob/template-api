@@ -220,7 +220,7 @@ class JwtRegister:
         return i
 
 
-class JwtPasswordRecover:
+class JwtRecover:
     revision: int = 1
 
     message: bytes
@@ -240,7 +240,7 @@ class JwtPasswordRecover:
             d: dict
     ):
         revision = d["r"]
-        i = JwtPasswordRecover()
+        i = JwtRecover()
         i.revision = revision
         i.message = base64.b64decode(d["m"])
         i.signature = base64.b64decode(d["s"])
@@ -290,8 +290,8 @@ class Jwt:
     refresh: JwtRefresh
     refresh_scopes: typing.List[str]
 
-    password_recover: JwtPasswordRecover
-    password_recover_scopes: typing.List[str]
+    recover: JwtRecover
+    recover_scopes: typing.List[str]
 
     def load_sub(
             self,
@@ -330,10 +330,10 @@ class Jwt:
         self.register = JwtRegister.from_json_dict(payload["data"])
         self.register_scopes = payload["scopes"]
 
-    def load_password_recover(
+    def load_recover(
             self,
             payload: dict
     ) -> None:
         self.load_sub(payload)
-        self.password_recover = JwtPasswordRecover.from_json_dict(payload["data"])
-        self.password_recover_scopes = payload["scopes"]
+        self.recover = JwtRecover.from_json_dict(payload["data"])
+        self.recover_scopes = payload["scopes"]
