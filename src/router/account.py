@@ -480,6 +480,28 @@ async def account_put_info(
         app_state: src.app_state.AppState = src.depends.app_state.depends(),
         dto: src.dto.account.AccountPutInfoIn = fastapi.Body(...)
 ):
+    account: src.database.account.model.Account
+    account = app_state.database.account.find_one(
+        src.database.account.filter.identifier(
+            jwt.sub
+        )
+    )
+
+    if not account:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT
+        )
+
+    if not account.info:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT_INFO
+        )
+
+    # todo
+    #   Implement generic attribute to update transform.
+
     raise src.error.error.Error(
         fastapi.status.HTTP_501_NOT_IMPLEMENTED,
         src.error.error_type.NOT_IMPLEMENTED
@@ -513,6 +535,12 @@ async def account_post_info(
         raise src.error.error.Error(
             fastapi.status.HTTP_404_NOT_FOUND,
             src.error.error_type.NOT_FOUND_ACCOUNT
+        )
+
+    if account.info:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_409_CONFLICT,
+            src.error.error_type.CONFLICT_ACCOUNT_INFO
         )
 
     account.info = src.database.account.model.AccountInfo()

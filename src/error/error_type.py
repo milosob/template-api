@@ -40,3 +40,7 @@ BAD_REQUEST_USERNAME_UNAVAILABLE = "bad-request-username-unavailable"
 # NOT FOUND
 NOT_FOUND_ACCOUNT = "not-found-account"
 NOT_FOUND_ACCOUNT_INFO = "not-found-account-info"
+
+# CONFLICT
+CONFLICT_ACCOUNT = "conflict-account"
+CONFLICT_ACCOUNT_INFO = "conflict-account-info"
