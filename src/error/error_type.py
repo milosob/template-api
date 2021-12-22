@@ -32,6 +32,10 @@ UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER = "unauthorized-password-recover-toke
 UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED = "unauthorized-password-recover-token-expired"
 UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES = "unauthorized-password-recover-token-scopes"
 
+# NOT FOUND
+NOT_FOUND_ACCOUNT = "not-found-account"
+NOT_FOUND_ACCOUNT_INFO = "not-found-account-info"
+
 # ACCOUNT REGISTER
 ACCOUNT_REGISTER_USERNAME_TAKEN = "account-register-username-taken"
 

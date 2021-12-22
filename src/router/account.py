@@ -444,16 +444,14 @@ async def account_get_info(
 
     if not account:
         raise src.error.error.Error(
-            fastapi.status.HTTP_400_BAD_REQUEST,
-            # TODO
-            ""
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT
         )
 
     if not account.info:
         raise src.error.error.Error(
             fastapi.status.HTTP_404_NOT_FOUND,
-            # TODO
-            ""
+            src.error.error_type.NOT_FOUND_ACCOUNT_INFO
         )
 
     return src.dto.account.AccountGetInfoOut(
@@ -510,9 +508,8 @@ async def account_post_info(
 
     if not account:
         raise src.error.error.Error(
-            fastapi.status.HTTP_400_BAD_REQUEST,
-            # TODO
-            ""
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT
         )
 
     account.info = src.database.account.model.AccountInfo()
