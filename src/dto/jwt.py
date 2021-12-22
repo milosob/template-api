@@ -293,11 +293,6 @@ class Jwt:
     password_recover: JwtPasswordRecover
     password_recover_scopes: typing.List[str]
 
-    def __init__(
-            self
-    ) -> None:
-        pass
-
     def load_sub(
             self,
             payload: dict
