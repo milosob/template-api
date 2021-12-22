@@ -382,8 +382,8 @@ async def account_post_password_recover(
 
     if not account:
         raise src.error.error.Error(
-            fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_INVALID
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT
         )
 
     old_password: str
