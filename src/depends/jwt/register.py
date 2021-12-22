@@ -22,10 +22,10 @@ def depends(
             app_state.service.jwt.verify(
                 token,
                 app_state.service.jwt.verify_register_scopes + scopes,
-                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
-                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
-                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,
-                src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_SCOPES,
+                src.error.error_type.UNAUTHORIZED_REGISTER_TOKEN_INVALID,
+                src.error.error_type.UNAUTHORIZED_REGISTER_TOKEN_ISSUER,
+                src.error.error_type.UNAUTHORIZED_REGISTER_TOKEN_EXPIRED,
+                src.error.error_type.UNAUTHORIZED_REGISTER_TOKEN_SCOPES,
                 app_state.service.jwt.verify_default_options
             )
         )

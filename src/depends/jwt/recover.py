@@ -22,10 +22,10 @@ def depends(
             app_state.service.jwt.verify(
                 token,
                 app_state.service.jwt.verify_recover_scopes + scopes,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,
-                src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_SCOPES,
+                src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_INVALID,
+                src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_ISSUER,
+                src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_EXPIRED,
+                src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_SCOPES,
                 app_state.service.jwt.verify_default_options
             )
         )

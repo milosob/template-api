@@ -69,7 +69,7 @@ async def account_post_register(
     if account:
         raise src.error.error.Error(
             fastapi.status.HTTP_400_BAD_REQUEST,
-            src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
+            src.error.error_type.BAD_REQUEST_USERNAME_UNAVAILABLE
         )
 
     account = src.database.account.model.Account()
@@ -94,8 +94,8 @@ async def account_post_register(
 
     if not account_inserted:
         raise src.error.error.Error(
-            fastapi.status.HTTP_400_BAD_REQUEST,
-            src.error.error_type.ACCOUNT_REGISTER_USERNAME_TAKEN
+            fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            src.error.error_type.SERVICE_UNAVAILABLE_DATABASE
         )
 
     account = account_inserted
@@ -123,7 +123,7 @@ async def account_post_register(
     except Exception:
         raise src.error.error.Error(
             fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            src.error.error_type.SERVICE_UNAVAILABLE_MAIL_ACCOUNT_REGISTER_CONFIRM
+            src.error.error_type.SERVICE_UNAVAILABLE_MAIL
         )
 
     return src.dto.account.AccountPostRegisterOut(
@@ -182,7 +182,7 @@ async def account_post_register_confirm(
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            src.error.error_type.SERVICE_UNAVAILABLE
+            src.error.error_type.SERVICE_UNAVAILABLE_DATABASE
         )
 
     return src.dto.account.AccountPostRegisterConfirmOut()
@@ -213,7 +213,7 @@ async def account_post_authenticate(
     if not account:
         raise src.error.error.Error(
             fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
+            src.error.error_type.UNAUTHORIZED_CREDENTIALS
         )
 
     if not app_state.service.password.password_verify(
@@ -222,7 +222,7 @@ async def account_post_authenticate(
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_ACCOUNT_AUTHENTICATE_CREDENTIALS_INVALID
+            src.error.error_type.UNAUTHORIZED_CREDENTIALS
         )
 
     jwt_access: src.dto.jwt.JwtAccess
@@ -335,7 +335,7 @@ async def account_post_password_forget(
     recover_token = app_state.service.jwt.issue(
         account.identifier,
         jwt_recover.to_json_dict(),
-        app_state.service.jwt.lifetime_recover,
+        app_state.service.jwt.lifetime_ecover,
         app_state.service.jwt.issue_recover_scopes
     )
 
@@ -351,7 +351,7 @@ async def account_post_password_forget(
     except Exception:
         raise src.error.error.Error(
             fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            src.error.error_type.SERVICE_UNAVAILABLE_MAIL_ACCOUNT_PASSWORD_RECOVER
+            src.error.error_type.SERVICE_UNAVAILABLE_MAIL
         )
 
     return src.dto.account.AccountPostPasswordForgetOut()
@@ -383,7 +383,7 @@ async def account_post_password_recover(
     if not account:
         raise src.error.error.Error(
             fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID
+            src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_INVALID
         )
 
     old_password: str
@@ -394,7 +394,7 @@ async def account_post_password_recover(
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_401_UNAUTHORIZED,
-            src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED
+            src.error.error_type.UNAUTHORIZED_RECOVER_TOKEN_EXPIRED
         )
 
     new_password: str
@@ -414,7 +414,7 @@ async def account_post_password_recover(
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            src.error.error_type.SERVICE_UNAVAILABLE
+            src.error.error_type.SERVICE_UNAVAILABLE_DATABASE
         )
 
     return src.dto.account.AccountPostPasswordRecoverOut(
@@ -530,7 +530,7 @@ async def account_post_info(
     ):
         raise src.error.error.Error(
             fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
-            src.error.error_type.SERVICE_UNAVAILABLE
+            src.error.error_type.SERVICE_UNAVAILABLE_DATABASE
         )
 
     return src.dto.account.AccountPostInfoOut(
