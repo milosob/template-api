@@ -268,22 +268,41 @@ async def account_post_authenticate(
     }
 )
 async def account_post_authenticate_refresh(
-        app_state: src.app_state.AppState = src.depends.app_state.depends(),
-        jwt: src.dto.jwt.Jwt = src.depends.jwt.refresh.depends()
+        jwt: src.dto.jwt.Jwt = src.depends.jwt.refresh.depends(),
+        app_state: src.app_state.AppState = src.depends.app_state.depends()
 ):
-    jwt.refresh.counter += 1
+    account: src.database.account.model.Account
+    account = app_state.database.account.find_one(
+        src.database.account.filter.identifier(
+            jwt.sub
+        )
+    )
+
+    if not account:
+        raise src.error.error.Error(
+            fastapi.status.HTTP_404_NOT_FOUND,
+            src.error.error_type.NOT_FOUND_ACCOUNT
+        )
+
+    jwt_access: src.dto.jwt.JwtAccess
+    jwt_access = src.dto.jwt.JwtAccess()
+    jwt_access.user = src.dto.jwt.JwtUser.from_account(account)
+
+    jwt_refresh: src.dto.jwt.JwtRefresh
+    jwt_refresh = src.dto.jwt.JwtRefresh()
+    jwt_refresh.counter = jwt.refresh.counter + 1
 
     access_token: str
     access_token = app_state.service.jwt.issue(
         jwt.sub,
-        jwt.access.to_json_dict(),
+        jwt_access.to_json_dict(),
         app_state.service.jwt.lifetime_access,
         jwt.access_scopes
     )
     refresh_token: str
     refresh_token = app_state.service.jwt.issue(
         jwt.sub,
-        jwt.refresh.to_json_dict(),
+        jwt_refresh.to_json_dict(),
         app_state.service.jwt.lifetime_refresh,
         jwt.refresh_scopes,
         access_token
