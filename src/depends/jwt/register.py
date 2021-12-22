@@ -21,7 +21,7 @@ def depends(
         jwt.load_register(
             app_state.service.jwt.verify(
                 token,
-                ["type:register"] + scopes,
+                app_state.service.jwt.verify_register_scopes + scopes,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_ACCOUNT_REGISTER_CONFIRM_TOKEN_EXPIRED,

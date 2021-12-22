@@ -22,7 +22,7 @@ def depends(
         jwt.load_access(
             app_state.service.jwt.verify(
                 model.access_token,
-                ["type:access"],
+                app_state.service.jwt.verify_access_scopes,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
                 None,
@@ -33,7 +33,7 @@ def depends(
         jwt.load_refresh(
             app_state.service.jwt.verify(
                 model.refresh_token,
-                ["type:refresh"] + scopes,
+                app_state.service.jwt.verify_refresh_scopes + scopes,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_REFRESH_TOKEN_EXPIRED,

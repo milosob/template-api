@@ -21,7 +21,7 @@ def depends(
         jwt.load_recover(
             app_state.service.jwt.verify(
                 token,
-                ["type:recover"] + scopes,
+                app_state.service.jwt.verify_recover_scopes + scopes,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_PASSWORD_RECOVER_TOKEN_EXPIRED,

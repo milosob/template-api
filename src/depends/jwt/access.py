@@ -21,7 +21,7 @@ def depends(
         jwt.load_access(
             app_state.service.jwt.verify(
                 token,
-                ["type:access"] + scopes,
+                app_state.service.jwt.verify_access_scopes + scopes,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_INVALID,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_ISSUER,
                 src.error.error_type.UNAUTHORIZED_ACCESS_TOKEN_EXPIRED,
