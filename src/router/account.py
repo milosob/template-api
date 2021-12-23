@@ -32,6 +32,14 @@ error_responses: dict = {
         "model": src.dto.error.ErrorApiOut,
         "description": "Error."
     },
+    fastapi.status.HTTP_404_NOT_FOUND: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    },
+    fastapi.status.HTTP_409_CONFLICT: {
+        "model": src.dto.error.ErrorApiOut,
+        "description": "Error."
+    },
     fastapi.status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "model": src.dto.error.ErrorApiOut,
         "description": "Error."
