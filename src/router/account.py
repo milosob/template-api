@@ -526,8 +526,29 @@ async def account_put_info(
             src.error.error_type.NOT_FOUND_ACCOUNT_INFO
         )
 
-    # todo
-    #   Implement generic attribute to update transform.
+    if dto.alias:
+        # todo
+        #   Unique alias validation.
+        account.info.gender = dto.alias
+
+    if dto.gender:
+        account.info.gender = dto.gender
+
+    if dto.birthdate:
+        account.info.birthdate = dto.birthdate
+
+    if not app_state.database.account.update_one(
+            account,
+            {
+                "$set": {
+                    src.database.account.update.info
+                }
+            }
+    ):
+        raise src.error.error.Error(
+            fastapi.status.HTTP_503_SERVICE_UNAVAILABLE,
+            src.error.error_type.SERVICE_UNAVAILABLE_DATABASE
+        )
 
     raise src.error.error.Error(
         fastapi.status.HTTP_501_NOT_IMPLEMENTED,

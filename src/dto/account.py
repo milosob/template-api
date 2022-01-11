@@ -4,6 +4,8 @@ import typing
 import fastapi
 import pydantic
 
+import src.validator.account
+
 
 # ACCOUNT POST  REGISTER
 
@@ -21,8 +23,7 @@ class AccountPostRegisterInBase(pydantic.BaseModel):
             cls,
             v: str
     ) -> str:
-        # TODO
-
+        v = src.validator.account.username(v)
         return v
 
     @pydantic.validator("password")
@@ -30,8 +31,7 @@ class AccountPostRegisterInBase(pydantic.BaseModel):
             cls,
             v: str
     ) -> str:
-        # TODO
-
+        v = src.validator.account.password(v)
         return v
 
 
@@ -82,8 +82,7 @@ class AccountPostAuthenticateInBase(pydantic.BaseModel):
             cls,
             v: str
     ) -> str:
-        # TODO
-
+        v = src.validator.account.username(v)
         return v
 
     @pydantic.validator("password")
@@ -91,8 +90,7 @@ class AccountPostAuthenticateInBase(pydantic.BaseModel):
             cls,
             v: str
     ) -> str:
-        # TODO
-
+        v = src.validator.account.password(v)
         return v
 
 
@@ -226,14 +224,58 @@ class AccountGetInfoOut(AccountGetInfoOutBase):
 # ACCOUNT PUT INFO
 class AccountPutInfoInBase(pydantic.BaseModel):
     alias: typing.Optional[str] = fastapi.Body(
-        ...
+        None
     )
     gender: typing.Optional[str] = fastapi.Body(
-        ...
+        None
     )
     birthdate: typing.Optional[datetime.datetime] = fastapi.Body(
-        ...
+        None
     )
+
+    @pydantic.root_validator(pre=True)
+    def validator_root(
+            cls,
+            v: dict
+    ) -> dict:
+        all_null_guard: bool
+        all_null_guard = True
+
+        for key, value in v.items():
+            if value:
+                all_null_guard = False
+
+        if all_null_guard:
+            raise ValueError("At least one field is required to perform resource update.")
+
+        return v
+
+    @pydantic.validator("alias")
+    def validator_alias(
+            self,
+            v: str
+    ) -> str:
+        if v:
+            v = src.validator.account.alias(v)
+        return v
+
+    @pydantic.validator("gender")
+    def validator_gender(
+            self,
+            v: str
+    ) -> str:
+        if v:
+            v = src.validator.account.gender(v)
+        return v
+
+    @pydantic.validator("birthdate")
+    def validator_birthdate(
+            self,
+            v: datetime.datetime
+    ) -> datetime.datetime:
+        if v:
+            v = src.validator.account.birthdate(v)
+        return v
 
 
 class AccountPutInfoIn(AccountPutInfoInBase):
@@ -251,6 +293,8 @@ class AccountPutInfoOut(AccountPutInfoOutBase):
 
 
 # ACCOUNT POST INFO
+
+# noinspection PyMethodParameters
 class AccountPostInfoInBase(pydantic.BaseModel):
     alias: str = fastapi.Body(
         ...
@@ -262,6 +306,30 @@ class AccountPostInfoInBase(pydantic.BaseModel):
         ...
     )
 
+    @pydantic.validator("alias")
+    def validator_alias(
+            cls,
+            v: str
+    ) -> str:
+        v = src.validator.account.alias(v)
+        return v
+
+    @pydantic.validator("gender")
+    def validator_gender(
+            cls,
+            v: str
+    ) -> str:
+        v = src.validator.account.gender(v)
+        return v
+
+    @pydantic.validator("birthdate")
+    def validator_birthdate(
+            cls,
+            v: datetime.datetime
+    ) -> datetime.datetime:
+        v = src.validator.account.birthdate(v)
+        return v
+
 
 class AccountPostInfoIn(AccountPostInfoInBase):
     pass
@@ -269,8 +337,8 @@ class AccountPostInfoIn(AccountPostInfoInBase):
 
 class AccountPostInfoOutBase(pydantic.BaseModel):
     alias: str
-    gender: str
-    birthdate: datetime.datetime
+    gender: typing.Optional[str]
+    birthdate: typing.Optional[datetime.datetime]
 
 
 class AccountPostInfoOut(AccountPostInfoOutBase):
