@@ -529,7 +529,7 @@ async def account_put_info(
     if dto.alias:
         # todo
         #   Unique alias validation.
-        account.info.gender = dto.alias
+        account.info.alias = dto.alias
 
     if dto.gender:
         account.info.gender = dto.gender
