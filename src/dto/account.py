@@ -252,7 +252,7 @@ class AccountPutInfoInBase(pydantic.BaseModel):
 
     @pydantic.validator("alias")
     def validator_alias(
-            self,
+            cls,
             v: str
     ) -> str:
         if v:
@@ -261,7 +261,7 @@ class AccountPutInfoInBase(pydantic.BaseModel):
 
     @pydantic.validator("gender")
     def validator_gender(
-            self,
+            cls,
             v: str
     ) -> str:
         if v:
@@ -270,7 +270,7 @@ class AccountPutInfoInBase(pydantic.BaseModel):
 
     @pydantic.validator("birthdate")
     def validator_birthdate(
-            self,
+            cls,
             v: datetime.datetime
     ) -> datetime.datetime:
         if v:
