@@ -13,7 +13,7 @@ def emails(
 ) -> typing.MutableMapping:
     return {
         "emails.value": {
-            "$in": [email.email for email in value.emails] if isinstance(
+            "$in": [email.email for email in value.contact.emails] if isinstance(
                 value,
                 src.database.account.model.Account
             ) else list(value)
