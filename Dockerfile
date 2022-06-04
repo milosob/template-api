@@ -8,4 +8,4 @@ RUN python3 -m venv venv && \
     . ./venv/bin/activate && \
     python -m pip install -e .
 ENV PATH="/app/venv/bin:${PATH}"
-ENTRYPOINT app --config-path /config.json
+ENTRYPOINT app --config /config.json

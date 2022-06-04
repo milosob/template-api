@@ -7,7 +7,7 @@ import src.app
 @click.command()
 @click.option(
     "-c",
-    "--config-path",
+    "--config",
     required=True,
     type=click.Path(
         exists=True,
@@ -16,15 +16,15 @@ import src.app
     ),
     help="Config file path.")
 def cli(
-        config_path: str,
+        config: str,
 ) -> None:
-    config: dict
+    config_json: dict
 
-    with open(config_path, "r") as config_file:
-        config = json.load(config_file)
+    with open(config, "r") as config_file:
+        config_json = json.load(config_file)
 
     src.app.run(
-        config=config
+        config=config_json
     )
 
 
