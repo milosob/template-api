@@ -1,15 +1,15 @@
 ### Description
 
-This project serves as easy extendable template for development of api services with use of Python and FastAPI.
+Extensible template for creating API services with account and JWT authentication support.
 
-Things template does:
+Features:
 
-- Account registration, email confirmation, JWT stateless recovery, JWT refreshing.
-- Account info model with `POST`, `PUT` and `GET` methods, easy extendable.
+- Account registration, confirmation, authentication, refreshing, recovery.
+- Account information model with `POST`, `PUT` and `GET` methods.
 - Authentication with use of JWT tokens and scopes with compact account state modeling inside JWT payload.
 - Basic locale detection, management and support for loading jinja2 templates for sending emails via SMTP.
 - Argon2 as default password hashing algorithm.
-- MongoDb based via custom wrapping on the driver.
+- MongoDb via custom wrapper.
 - Some initial work towards multiple email per account support.
 - Verbose string based error reporting.
 - Configuration via `config.json` file.
@@ -17,14 +17,17 @@ Things template does:
 Notice:
 
 - By default, the template is configured to allow unconfirmed users to pass authentication and receive a token
-  with `type: access` scopes.
-- If local mail trap is running at port 25252, SMTP username and password settings are ignored.
-- There are no default constrains or indexes, you need to supply your own.
+  with `type:access` scopes.
+- If local mail server is running at port 25252, SMTP username and password settings are ignored.
+- There are no default database constrains or indexes.
+- Remember to overwrite the default JWT configuration keys.
 
 ### Run
 
-It is possible to run the template without having a running MongoDb node or mail trap server. However, most calls with
-result with an error. If you desire to work with the template you need a running MongoDb node and mail/trap server.
+It is possible to run the template without having a running MongoDb node or mail trap server. However, most calls will
+result with an error.
+
+Follow the instructions to use the project:
 
 ```shell
 git clone https://github.com/milosob/template-api.git template-api
@@ -61,3 +64,11 @@ app --config config.json
 #### Docker
 
 To run a template with docker, build the image and run it with the mounted configuration file at `/config.json`.
+
+```shell
+docker build -t local/template-api .
+```
+
+```shell
+docker run -v $(pwd)/config.json:/config.json:ro local/template-api
+```
