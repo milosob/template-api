@@ -22,7 +22,7 @@ Notice:
 - There are no default database constrains or indexes.
 - Remember to overwrite the default JWT configuration keys.
 
-### Run
+### Usage
 
 It is possible to run the template without having a running MongoDb node or mail trap server. However, most calls will
 result with an error.
@@ -63,7 +63,7 @@ app --config config.json
 
 #### Docker
 
-To run a template with docker, build the image and run it with the mounted configuration file at `/config.json`.
+To use a template with docker, build the image and run it with the mounted configuration file at `/config.json`.
 
 ```shell
 docker build -t local/template-api .
