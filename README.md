@@ -63,7 +63,7 @@ app --config config.json
 
 #### Docker
 
-To use a template with docker, build the image and run it with the mounted configuration file at `/config.json`.
+To use a template with a docker, build the image and run it with the configuration file mounted at `/config.json`.
 
 ```shell
 docker build -t local/template-api .
