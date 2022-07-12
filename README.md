@@ -1,6 +1,6 @@
 ### Description
 
-Extensible template for creating API services with account and JWT authentication support.
+Template for creating API services with account and JWT authentication support.
 
 Features:
 
