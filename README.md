@@ -14,7 +14,7 @@ Features:
 - Verbose string based error reporting.
 - Configuration via `config.json` file.
 
-Notice:
+Note:
 
 - By default, the template is configured to allow unconfirmed users to pass authentication and receive a token
   with `type:access` scopes.
